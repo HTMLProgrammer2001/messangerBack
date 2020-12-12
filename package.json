@@ -9,7 +9,7 @@
     "dev": "nodemon",
     "build": "rimraf ./build && tsc",
 	"prod": "tsc && node ./build/app.js",
-	"ci": "null"
+	"ci": "echo hi"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.0",
