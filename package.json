@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "nodemon",
     "build": "rimraf ./build && tsc",
-	"prod": "tsc && node ./build/app.js"
+	"prod": "tsc && node ./build/app.js",
+	"ci": "null"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.0",
