@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "nodemon",
     "build": "rimraf ./build && tsc",
-	"prod": "tsc && node ./build/app.js",
+	"prod": "node ./build/app.js",
 	"ci": "echo hi"
   },
   "devDependencies": {
@@ -16,7 +16,7 @@
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.9",
     "@types/express-validator": "^3.0.0",
-    "@types/mongoose": "^5.10.2",
+    "@types/mongoose": "5.10",
     "@types/node": "^14.14.12",
     "dotenv": "^8.2.0",
     "nodemon": "^2.0.6",
@@ -28,6 +28,6 @@
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "express-validator": "^6.8.0",
-    "mongoose": "^5.11.7"
+    "mongoose": "5.10"
   }
 }
