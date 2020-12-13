@@ -1,12 +1,16 @@
 import {Schema, model, Document} from 'mongoose';
 
+import {Roles} from '../constants/Roles';
+
 
 export interface IUser extends Document{
 	nickname?: string,
+	sessionCode?: string,
 	name: string,
 	phone: string,
 	email?: string,
-	avatar: string
+	avatar: string,
+	role: Roles
 }
 
 const UserSchema = new Schema({
@@ -16,6 +20,10 @@ const UserSchema = new Schema({
 		unique: false,
 		minlength: 4,
 		maxlength: 32
+	},
+	sessionCode: {
+		type: String,
+		unique: true
 	},
 	nickname: {
 		type: String,
@@ -39,6 +47,10 @@ const UserSchema = new Schema({
 	avatar: {
 		type: String,
 		required: false
+	},
+	role: {
+		type: Number,
+		default: Roles.USER
 	}
 });
 

@@ -1,19 +1,21 @@
 import express, {NextFunction, Request, Response, Errback, Application} from 'express';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
+import passport from 'passport';
+
+dotenv.config();
 
 import rootRouter from './routes/';
 import {connect} from './db';
+import './passport';
 
-
-//environment variables set
-dotenv.config();
 
 const app: Application = express();
 
 //middleware
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
+app.use(passport.initialize());
 
 //set router
 app.use('/', rootRouter);
