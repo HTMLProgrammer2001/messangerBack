@@ -12,11 +12,13 @@ class NexmoService{
 		});
 
 		this.from = <string>process.env.FROM;
-		console.log(this.from);
 	}
 
 	sendMessage(to: string, text: string){
-		return Promise.resolve({to, text});
+		if(process.env.NODE_ENV != 'production') {
+			console.log(text);
+			return Promise.resolve({to, text});
+		}
 
 		//promisify
 		return new Promise((resolve, reject) => {
@@ -36,6 +38,11 @@ class NexmoService{
 
 	sendLoginMessage(to: string, code: number | string){
 		const message = `It's your login code: ${code}. Don't show it to nobody!!!`;
+		return this.sendMessage(to, message);
+	}
+
+	sendSignInMessage(to: string, code: number | string) {
+		const message = `It's your sign in code: ${code}. Don't show it nobody`;
 		return this.sendMessage(to, message);
 	}
 }

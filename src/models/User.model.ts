@@ -8,8 +8,8 @@ export interface IUser extends Document{
 	sessionCode?: string,
 	name: string,
 	phone: string,
-	email?: string,
-	avatar: string,
+	avatar?: string,
+	description?: string,
 	role: Roles
 }
 
@@ -23,7 +23,8 @@ const UserSchema = new Schema({
 	},
 	sessionCode: {
 		type: String,
-		unique: true
+		unique: true,
+		sparse: true
 	},
 	nickname: {
 		type: String,
@@ -38,12 +39,6 @@ const UserSchema = new Schema({
 		required: true,
 		validate: /^\+?\d{4,}$/
 	},
-	email: {
-		type: String,
-		unique: true,
-		required: false,
-		validate: /^.+@.{3,}\..{2,}$/
-	},
 	avatar: {
 		type: String,
 		required: false
@@ -51,6 +46,10 @@ const UserSchema = new Schema({
 	role: {
 		type: Number,
 		default: Roles.USER
+	},
+	description: {
+		type: String,
+		required: false
 	}
 });
 
