@@ -2,8 +2,8 @@ import {body} from 'express-validator';
 
 import User from '../../models/User.model';
 import Code from '../../models/Code.model';
-import uniqueCustomValidator from '../validators/uniqueCustomValidator';
-import existsCustomValidator from '../validators/existsCustomValidator';
+import uniqueCustomValidator from '../validators/unique.validator';
+import existsCustomValidator from '../validators/exists.validator';
 import {IAuthRequest} from '../../interfaces/IAuthRequest';
 import {Response} from 'express';
 import {Document} from 'mongoose';
