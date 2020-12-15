@@ -1,21 +1,18 @@
 import {Schema} from 'mongoose';
 
 import {CodeTypes} from '../constants/CodeTypes';
-import Code from '../models/Code.model';
+import CodeRepository from '../repositories/Code.repository';
 import generateCode from './codeGenerator';
 import nexmoService from '../services/Nexmo.service';
 
 
 const sendCode = async (phone: string, type: CodeTypes, user: Schema.Types.ObjectId) => {
 	//create code
-	let code = new Code({
+	let code = await CodeRepository.createCode({
 		code: generateCode(),
-		expires: Date.now() + parseInt(process.env.CODE_TTL || ''),
-		type,
-		user
+		expires: new Date(Date.now() + parseInt(process.env.CODE_TTL || '')),
+		type, user
 	});
-
-	await code.save();
 
 	//send message
 	return nexmoService.sendSignInMessage(phone, code.code);

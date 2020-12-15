@@ -3,15 +3,17 @@ import {Schema, model, Document} from 'mongoose';
 import {Roles} from '../constants/Roles';
 
 
-export interface IUser extends Document{
+export interface IUserData {
 	nickname?: string,
 	sessionCode?: string,
 	name: string,
 	phone: string,
 	avatar?: string,
 	description?: string,
-	role: Roles
+	role?: Roles
 }
+
+export interface IUser extends Document, IUserData{}
 
 const UserSchema = new Schema({
 	name: {

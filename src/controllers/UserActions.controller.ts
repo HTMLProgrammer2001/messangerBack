@@ -1,18 +1,20 @@
 import {Request, Response} from 'express';
 import jwt from 'jsonwebtoken';
 
-import User from '../models/User.model';
-import Code from '../models/Code.model';
+import User, {IUser} from '../models/User.model';
+import UserRepository from '../repositories/User.repository';
+import CodeRepository from '../repositories/Code.repository';
 import codeGenerator from '../helpers/codeGenerator';
+import sendCode from '../helpers/sendCode';
 import {CodeTypes} from '../constants/CodeTypes';
 import {IAuthRequest} from '../interfaces/IAuthRequest';
-import sendCode from '../helpers/sendCode';
 
 
 type ILoginRequest = Request<{}, {}, {phone: string}>
 type ISignInRequest = Request<{}, {}, {phone: string, nickname: string, name: string}>
 type IConfirmLoginRequest = Request<{}, {}, {code: string}>
 type IConfirmSignRequest = Request<{}, {}, {code: string}>
+type IResendRequest = Request<{}, {}, {type: CodeTypes, phone: string}>
 type ILogoutRequest = IAuthRequest
 type IEditMeRequest = IAuthRequest & Request<{}, {}, {
 	phone: string,
@@ -27,13 +29,7 @@ class UserActionsController{
 		const {phone, nickname, name} = req.body;
 
 		//create user
-		const user = new User({
-			phone,
-			nickname,
-			name
-		});
-
-		await user.save();
+		const user = await UserRepository.create({phone, nickname, name});
 
 		//send code
 		try {
@@ -49,7 +45,7 @@ class UserActionsController{
 
 	async login(req: ILoginRequest, res: Response){
 		//search user
-		const user = await User.findOne({phone: req.body.phone});
+		const user = await UserRepository.getByPhone(req.body.phone);
 
 		if(!user)
 			return res.status(422);
@@ -68,12 +64,12 @@ class UserActionsController{
 
 	async confirmSign(req: IConfirmSignRequest, res: Response){
 		//search login code
-		const code = await Code.findOne({code: req.body.code, type: CodeTypes.SIGNIN});
+		const code = await CodeRepository.findByCodeAndType(req.body.code, CodeTypes.SIGNIN);
 
 		if(!code)
 			return res.sendStatus(422);
 
-		await code.remove();
+		await CodeRepository.removeCode(code._id);
 
 		return res.json({
 			message: 'Sign confirmed successfully'
@@ -82,14 +78,14 @@ class UserActionsController{
 
 	async confirmLogin(req: IConfirmLoginRequest, res: Response){
 		//search login code
-		const code = await Code.findOne({code: req.body.code, type: CodeTypes.LOGIN});
+		const code = await CodeRepository.findByCodeAndType(req.body.code, CodeTypes.LOGIN);
 
 		if(!code)
 			return res.sendStatus(422);
 
 		//update user token
 		const populatedCode = await code.populate('user').execPopulate(),
-			user = populatedCode.user;
+			user = populatedCode.user as IUser;
 
 		user.sessionCode = codeGenerator(12);
 
@@ -98,7 +94,7 @@ class UserActionsController{
 
 		//generate JWT token
 		const jwtToken = await jwt.sign({
-			sessionCode: populatedCode.user.sessionCode,
+			sessionCode: user.sessionCode,
 			expires: Date.now() + parseInt(process.env.TOKEN_TTL || '0')
 		}, <string>process.env.JWT_SECRET);
 
@@ -108,6 +104,26 @@ class UserActionsController{
 			token: jwtToken,
 			user
 		});
+	}
+
+	async resend(req: IResendRequest, res: Response){
+		//validate code type
+		if(req.body.type in CodeTypes){
+			//validate user exists
+			const user = await UserRepository.getByPhone(req.body.phone);
+
+			if(!user)
+				return res.status(422).json({message: 'No user with this phone'});
+
+			await sendCode(req.body.phone, req.body.type, user._id);
+
+			//return successfully message
+			return res.json({
+				message: 'Code was successfully resend'
+			});
+		}
+		else
+			res.status(422).json({message: 'Incorrect type'});
 	}
 
 	async logout(req: ILogoutRequest, res: Response){

@@ -21,6 +21,12 @@ export const confirmValidators = [
 		.custom(existsCustomValidator(Code, 'code')).withMessage('This code not exists')
 ];
 
+export const resendValidators = [
+	body('phone').isMobilePhone('any').withMessage('Phone must be valid phone number')
+		.custom(existsCustomValidator(User, 'phone')).withMessage('User with this phone not exists'),
+	body('type').isNumeric().withMessage('Type must be numeric')
+];
+
 export const signValidators = [
 	body('name').isLength({min: 4, max: 32}).withMessage('Name must be from 4 to 32 symbols'),
 	body('nickname').isLength({min: 4, max: 32}).withMessage('Nick must be from 4 to 32 symbols')

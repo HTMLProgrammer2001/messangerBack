@@ -4,12 +4,14 @@ import {IUser} from './User.model';
 import {CodeTypes} from '../constants/CodeTypes';
 
 
-export interface ICode extends Document{
+export interface ICodeData {
 	code: string,
 	expires: Date,
-	user: IUser,
+	user: IUser | Schema.Types.ObjectId,
 	type: CodeTypes
 }
+
+export interface ICode extends Document, ICodeData{}
 
 const CodeSchema = new Schema<ICode>({
 	code: String,

@@ -30,6 +30,11 @@ userActionsRouter.post('/logout',
 	<any>UserActionsController.logout
 );
 
+userActionsRouter.post('/resend',
+	errorOnInvalid(UserActionsRequest.resendValidators),
+	<any>UserActionsController.resend
+);
+
 userActionsRouter.post('/sign',
 	errorOnInvalid(UserActionsRequest.signValidators),
 	UserActionsController.signIn
