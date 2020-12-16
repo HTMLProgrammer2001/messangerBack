@@ -2,6 +2,7 @@ import express, {NextFunction, Request, Response, Errback, Application} from 'ex
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import passport from 'passport';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ import './passport';
 const app: Application = express();
 
 //middleware
+app.use(<any>cors());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(passport.initialize());

@@ -28,8 +28,16 @@ class UserActionsController{
 	async signIn(req: ISignInRequest, res: Response){
 		const {phone, nickname, name} = req.body;
 
+		//get user
+		let user = await UserRepository.getByPhone(phone);
+
+		if(user && !user.verified)
+			return res.json({message: 'User already exists but not verified'});
+		else if(user)
+			return res.status(422).json({message: 'User with this phone already signed in'});
+
 		//create user
-		const user = await UserRepository.create({phone, nickname, name});
+		user = await UserRepository.create({phone, nickname, name});
 
 		//send code
 		try {
@@ -47,7 +55,7 @@ class UserActionsController{
 		//search user
 		const user = await UserRepository.getByPhone(req.body.phone);
 
-		if(!user)
+		if(!user || !user.verified)
 			return res.status(422);
 
 		//send code
@@ -69,10 +77,21 @@ class UserActionsController{
 		if(!code)
 			return res.sendStatus(422);
 
+		//get code user
+		const populatedCode = await code.populate('user').execPopulate(),
+			user = populatedCode.user as IUser;
+
+		//verify him
+		user.verified = true;
+		await user.save();
+
+		//remove code
 		await CodeRepository.removeCode(code._id);
 
+		//return response
 		return res.json({
-			message: 'Sign confirmed successfully'
+			message: 'Sign confirmed successfully',
+			user
 		});
 	}
 
@@ -81,7 +100,10 @@ class UserActionsController{
 		const code = await CodeRepository.findByCodeAndType(req.body.code, CodeTypes.LOGIN);
 
 		if(!code)
-			return res.sendStatus(422);
+			return res.status(422).json({message: 'This code is invalid'});
+
+		if(+code.expires < Date.now())
+			return res.status(422).json({message: 'Code expires'});
 
 		//update user token
 		const populatedCode = await code.populate('user').execPopulate(),
@@ -132,7 +154,7 @@ class UserActionsController{
 			req.user.sessionCode = undefined;
 			await req.user.save();
 
-			res.json({message: 'You were successfully logged out'})
+			return res.json({message: 'You were successfully logged out'})
 		}
 
 		//show 403 error

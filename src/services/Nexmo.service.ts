@@ -3,7 +3,7 @@ import Nexmo from 'nexmo';
 
 class NexmoService{
 	private nexmo: Nexmo;
-	private from: string;
+	private readonly from: string;
 
 	constructor(){
 		this.nexmo = new Nexmo({

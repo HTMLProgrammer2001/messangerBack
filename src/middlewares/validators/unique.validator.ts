@@ -1,5 +1,5 @@
 import {Document, Model} from 'mongoose';
-import {Request, Response} from 'express';
+import {Response} from 'express';
 
 
 type IgnoreFunc = (req: any, res: Response, model: Document) => boolean;
@@ -9,9 +9,9 @@ const uniqueCustomValidator = (model: Model<any>, field: string, ignore?: Ignore
 		//search
 		const q = await model.find({[field]: val});
 
-		if (q.length && !q.every(doc => !ignore || ignore(req, res, doc)))
+		if (q.length && !q.every(doc => ignore && ignore(req, res, doc)))
 			//show error if exists
-			throw new Error(`Model with same ${field} already exists`);
+			return Promise.reject(`Model with same ${field} already exists`);
 	};
 };
 
