@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import User, {IUser, IUserData} from '../models/User.model';
 import UserRepository from '../repositories/User.repository';
 import CodeRepository from '../repositories/Code.repository';
+import nexmoService from '../services/Nexmo.service';
 import codeGenerator from '../helpers/codeGenerator';
 import sendCode from '../helpers/sendCode';
 import {CodeTypes} from '../constants/CodeTypes';
@@ -191,6 +192,19 @@ class UserActionsController{
 
 		return res.json({
 			message: 'User was edited',
+			newUser: user
+		});
+	}
+
+	async deleteAvatar(req: IAuthRequest, res: Response){
+		if(!req.user)
+			return res.sendStatus(403);
+
+		await req.user.updateOne({avatar: null});
+		const user = await User.findById(req.user._id);
+
+		return res.json({
+			message: 'Avatar was deleted',
 			newUser: user
 		});
 	}

@@ -70,4 +70,9 @@ userActionsRouter.post('/confirm/sign',
 	UserActionsController.confirmSign
 );
 
+userActionsRouter.delete('/avatar',
+	authenticate('bearer', {session: false}),
+	UserActionsController.deleteAvatar
+);
+
 export default userActionsRouter;

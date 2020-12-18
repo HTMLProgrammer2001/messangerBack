@@ -14,8 +14,15 @@ const sendCode = async (phone: string, type: CodeTypes, user: Schema.Types.Objec
 		type, user
 	});
 
+	switch (type) {
+		case CodeTypes.SIGNIN:
+			return nexmoService.sendSignInMessage(phone, code.code);
+		case CodeTypes.LOGIN:
+			return nexmoService.sendLoginMessage(phone, code.code);
+	}
+
 	//send message
-	return nexmoService.sendSignInMessage(phone, code.code);
+	return Promise.reject('Incorrect type');
 };
 
 export default sendCode;
