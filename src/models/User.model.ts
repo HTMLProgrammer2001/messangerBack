@@ -11,7 +11,9 @@ export interface IUserData {
 	avatar?: string,
 	description?: string,
 	role?: Roles,
-	verified?: boolean
+	verified?: boolean,
+	lastSeen?: Date,
+	options?: Object
 }
 
 export interface IUser extends Document, IUserData{}
@@ -57,6 +59,14 @@ const UserSchema = new Schema({
 	verified: {
 		type: Boolean,
 		default: false
+	},
+	lastSeen: {
+		type: Date,
+		default: Date.now()
+	},
+	options: {
+		type: Object,
+		default: {}
 	}
 });
 

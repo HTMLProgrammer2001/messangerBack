@@ -1,7 +1,7 @@
 import {Request, Response} from 'express';
 import jwt from 'jsonwebtoken';
 
-import User, {IUser} from '../models/User.model';
+import User, {IUser, IUserData} from '../models/User.model';
 import UserRepository from '../repositories/User.repository';
 import CodeRepository from '../repositories/Code.repository';
 import codeGenerator from '../helpers/codeGenerator';
@@ -169,9 +169,24 @@ class UserActionsController{
 		if(!req.user)
 			return res.sendStatus(403);
 
-		const {phone, name, avatar, description, nickname} = req.body;
+		const {name, description, nickname} = req.body,
+			newDoc: Partial<IUserData> = {};
 
-		await req.user.updateOne({phone, name, nickname, description});
+		//parse data to change
+		if(name)
+			newDoc['name'] = name;
+
+		if(description)
+			newDoc['description'] = description;
+
+		if(nickname)
+			newDoc['nickname'] = nickname;
+
+		if(req.file)
+			newDoc['avatar'] = `${process.env.APP_URL}/avatars/${req.file.filename}`;
+
+		//update user and return new
+		await req.user.updateOne(newDoc);
 		const user = await User.findById(req.user._id);
 
 		return res.json({

@@ -2,6 +2,7 @@ import {Schema, Document, model} from 'mongoose';
 
 import {IUser} from './User.model';
 import {DialogTypes} from '../constants/DialogTypes';
+import {IMessage} from './Message.model';
 
 
 export interface IDialog extends Document{
@@ -13,7 +14,8 @@ export interface IDialog extends Document{
 		avatar?: string,
 		open: boolean,
 	},
-	participants: Array<{user: IUser, role?: number}>
+	participants: Array<{user: IUser, role?: number}>,
+	lastMessage?: IMessage | Schema.Types.ObjectId
 }
 
 const DialogSchema = new Schema<IDialog>({
@@ -53,7 +55,12 @@ const DialogSchema = new Schema<IDialog>({
 			type: Schema.Types.ObjectId,
 			ref: 'User'
 		}
-	}]
-}, {timestamps: true});
+	}],
+	lastMessage: {
+		type: Schema.Types.ObjectId,
+		ref: 'Message',
+		required: false
+	}
+});
 
 export default model<IDialog>('Dialog', DialogSchema);

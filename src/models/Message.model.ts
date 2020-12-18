@@ -1,17 +1,26 @@
 import {Document, model, Schema} from 'mongoose';
 
+import {IDialog} from './Dialog.model';
+import {IUser} from './User.model';
+
 
 export interface IMessage extends Document{
-	dialog: number,
+	dialog: IDialog | Schema.Types.ObjectId,
+	author: IUser | Schema.Types.ObjectId,
 	type: number,
 	message?: string,
-	url?: string
+	url?: string,
+	time?: Date
 }
 
 const MessageSchema = new Schema<IMessage>({
 	dialog: {
 		type: Schema.Types.ObjectId,
 		ref: 'Dialog'
+	},
+	author: {
+		type: Schema.Types.ObjectId,
+		ref: 'User'
 	},
 	type: Number,
 	message: {
@@ -21,6 +30,10 @@ const MessageSchema = new Schema<IMessage>({
 	url: {
 		type: String,
 		required: false
+	},
+	time: {
+		type: Date,
+		default: new Date()
 	}
 });
 

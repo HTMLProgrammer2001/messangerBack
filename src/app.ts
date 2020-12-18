@@ -9,6 +9,8 @@ dotenv.config();
 import rootRouter from './routes/';
 import {connect} from './db';
 import './passport';
+import updateSeenMiddleware from './middlewares/updateSeen.middleware';
+import logInWithoutRedirect from './middlewares/logInWithoutRedirect.middleware';
 
 
 const app: Application = express();
@@ -18,6 +20,9 @@ app.use(<any>cors());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(passport.initialize());
+app.use(express.static(__dirname + '/static'));
+
+app.use(logInWithoutRedirect, updateSeenMiddleware);
 
 //set router
 app.use('/', rootRouter);

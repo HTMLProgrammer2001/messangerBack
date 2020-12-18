@@ -2,11 +2,11 @@ import {body} from 'express-validator';
 import {Request, Response} from 'express';
 import {Document} from 'mongoose';
 
+import {IAuthRequest} from '../../interfaces/IAuthRequest';
 import User, {IUser} from '../../models/User.model';
 import Code from '../../models/Code.model';
 import uniqueCustomValidator from '../validators/unique.validator';
 import existsCustomValidator from '../validators/exists.validator';
-import {IAuthRequest} from '../../interfaces/IAuthRequest';
 
 
 export const loginValidators = [
@@ -46,13 +46,11 @@ const ignoreUser = (req: IAuthRequest, res: Response, doc: Document) => {
 };
 
 export const editMeValidators = [
-	body('name').isLength({min: 4, max: 32}).withMessage('Name must be from 4 to 32 symbols'),
-	body('nickname').isLength({min: 4, max: 32}).withMessage('Nick must be from 4 to 32 symbols')
+	body('name').optional().isLength({min: 4, max: 32}).withMessage('Name must be from 4 to 32 symbols'),
+	body('nickname').optional()
+		.isLength({min: 4, max: 32}).withMessage('Nick must be from 4 to 32 symbols')
 		.custom(uniqueCustomValidator(User, 'nickname', ignoreUser))
 		.withMessage('User with this nickname already exists'),
-
-	body('phone').isMobilePhone('any').withMessage('Phone must be valid phone number')
-		.custom(uniqueCustomValidator(User, 'phone', ignoreUser)).withMessage('User with this phone already signed in'),
 
 	body('avatar').optional(),
 	body('description').optional().isString().withMessage('Must be a string')

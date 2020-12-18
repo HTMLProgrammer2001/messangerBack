@@ -10,12 +10,12 @@ dialogsRouter.use(authenticate('bearer', {session: false}));
 
 dialogsRouter.get('/',
 	DialogRequest.getDialogsValidators,
-	<any>DialogController.getDialogs
+	DialogController.getDialogs
 );
 
 dialogsRouter.get('/:nickname',
 	DialogRequest.getDialogValidators,
-	<any>DialogController.getDialog
+	DialogController.getDialog
 );
 
 export default dialogsRouter;
