@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import User, {IUser, IUserData} from '../models/User.model';
 import UserRepository from '../repositories/User.repository';
 import CodeRepository from '../repositories/Code.repository';
-import nexmoService from '../services/Nexmo.service';
+import StorageService from '../services/StorageService';
 import codeGenerator from '../helpers/codeGenerator';
 import sendCode from '../helpers/sendCode';
 import {CodeTypes} from '../constants/CodeTypes';
@@ -183,8 +183,12 @@ class UserActionsController{
 		if(nickname)
 			newDoc['nickname'] = nickname;
 
-		if(req.file)
-			newDoc['avatar'] = `${process.env.APP_URL}/avatars/${req.file.filename}`;
+		if(req.file) {
+			if(req.user?.avatar)
+				await StorageService.remove(req.user.avatar);
+
+			newDoc['avatar'] = await StorageService.upload(req.file);
+		}
 
 		//update user and return new
 		await req.user.updateOne(newDoc);
@@ -200,6 +204,16 @@ class UserActionsController{
 		if(!req.user)
 			return res.sendStatus(403);
 
+		//show error if has not avatar
+		if(!req.user.avatar)
+			return res.status(422).json({
+				message: 'This user has not avatar'
+			});
+
+		//delete file
+		await StorageService.remove(req.user.avatar);
+
+		//update user in DB
 		await req.user.updateOne({avatar: null});
 		const user = await User.findById(req.user._id);
 

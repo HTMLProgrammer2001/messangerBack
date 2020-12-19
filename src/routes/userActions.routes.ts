@@ -4,6 +4,7 @@ import multer from 'multer';
 
 import UserActionsController from '../controllers/UserActions.controller';
 import * as UserActionsRequest from '../middlewares/requests/userActions.request';
+import StorageService from '../services/StorageService';
 import errorOnInvalid from '../middlewares/errorOnInvalid.middleware';
 import codeGenerator from '../helpers/codeGenerator';
 
@@ -36,7 +37,7 @@ userActionsRouter.get('/me',
 userActionsRouter.post('/me',
 	authenticate('bearer', {session: false}),
 	errorOnInvalid(UserActionsRequest.editMeValidators),
-	uploader.single('avatar'),
+	StorageService.getMiddleware('avatar'),
 	UserActionsController.editMe
 );
 
