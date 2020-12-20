@@ -19,7 +19,7 @@ class FileSystemStorageService implements IStorage {
 			path = `./src/static/avatars/${newFilename}`;
 
 		//create file
-		fs.writeFileSync(path, file.buffer);
+		await fs.promises.writeFile(path, file.buffer);
 
 		return `${process.env.APP_URL}/avatars/${newFilename}`;
 	}
@@ -29,12 +29,15 @@ class FileSystemStorageService implements IStorage {
 			path = `./src/static/avatars/${fileName}`;
 
 		//if file exists then delete it
-		if(fs.existsSync(path)) {
-			fs.unlinkSync(path);
+		try {
+			await fs.promises.stat(path);
+			await fs.promises.unlink(path);
+
 			return true;
 		}
-
-		return false;
+		catch (e) {
+			return false;
+		}
 	}
 }
 

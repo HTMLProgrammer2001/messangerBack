@@ -10,6 +10,7 @@ const sendCode = async (phone: string, type: CodeTypes, user: Schema.Types.Objec
 	//create code
 	let code = await CodeRepository.createCode({
 		code: generateCode(),
+		to: phone,
 		expires: new Date(Date.now() + parseInt(process.env.CODE_TTL || '')),
 		type, user
 	});
@@ -19,6 +20,8 @@ const sendCode = async (phone: string, type: CodeTypes, user: Schema.Types.Objec
 			return nexmoService.sendSignInMessage(phone, code.code);
 		case CodeTypes.LOGIN:
 			return nexmoService.sendLoginMessage(phone, code.code);
+		case CodeTypes.CHANGE_PHONE:
+			return nexmoService.sendChangePhoneMessage(phone, code.code);
 	}
 
 	//send message

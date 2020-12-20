@@ -45,6 +45,11 @@ class NexmoService{
 		const message = `It's your sign in code: ${code}. Don't show it nobody`;
 		return this.sendMessage(to, message);
 	}
+
+	sendChangePhoneMessage(to: string, code: string | number){
+		const message = `It's your change phone code: ${code}. Don't show it nobody`;
+		return this.sendMessage(to, message);
+	}
 }
 
 export default new NexmoService();

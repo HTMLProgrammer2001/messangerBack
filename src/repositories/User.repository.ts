@@ -9,7 +9,7 @@ class UserRepository{
 		return user.save();
 	}
 
-	async update(id: Schema.Types.ObjectId, data: IUserData){
+	async update(id: Schema.Types.ObjectId, data: Partial<IUserData>){
 		return User.updateOne({_id: id}, data);
 	}
 

@@ -9,16 +9,20 @@ import uniqueCustomValidator from '../validators/unique.validator';
 import existsCustomValidator from '../validators/exists.validator';
 
 
+const getCodeValidator = (field: string) => {
+	return body(field).exists().withMessage('Code is required').bail()
+		.isNumeric().withMessage('Code must be numeric').bail()
+		.isLength({max: 8, min: 8}).withMessage('Code must be 8 digits').bail()
+		.custom(existsCustomValidator(Code, 'code')).withMessage('This code not exists')
+};
+
 export const loginValidators = [
 	body('phone').isMobilePhone('any').withMessage('Phone must be valid phone number').bail()
 		.custom(existsCustomValidator(User, 'phone')).withMessage('User with this phone not exists')
 ];
 
 export const confirmValidators = [
-	body('code').exists().withMessage('Code is required').bail()
-		.isNumeric().withMessage('Code must be numeric').bail()
-		.isLength({max: 8, min: 8}).withMessage('Code must be 8 digits').bail()
-		.custom(existsCustomValidator(Code, 'code')).withMessage('This code not exists')
+	getCodeValidator('code')
 ];
 
 export const resendValidators = [
@@ -54,4 +58,17 @@ export const editMeValidators = [
 
 	body('avatar').optional(),
 	body('description').optional().isString().withMessage('Must be a string')
+];
+
+export const changePhoneValidators = [
+	body('oldPhone').isMobilePhone('any').withMessage('Phone must be valid phone number')
+		.custom(existsCustomValidator(User, 'phone')).withMessage('User with this phone not exists'),
+
+	body('newPhone').isMobilePhone('any').withMessage('Phone must be valid phone number')
+		.custom(uniqueCustomValidator(User, 'phone')).withMessage('User with this phone already exists')
+];
+
+export const confirmChangePhoneValidators = [
+	getCodeValidator('oldCode'),
+	getCodeValidator('newCode')
 ];

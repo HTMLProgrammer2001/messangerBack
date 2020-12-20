@@ -1,5 +1,6 @@
 import {Request, Response} from 'express';
 import jwt from 'jsonwebtoken';
+import {Schema} from 'mongoose';
 
 import User, {IUser, IUserData} from '../models/User.model';
 import UserRepository from '../repositories/User.repository';
@@ -13,6 +14,8 @@ import {IAuthRequest} from '../interfaces/IAuthRequest';
 
 type ILoginRequest = Request<{}, {}, {phone: string}>
 type ISignInRequest = Request<{}, {}, {phone: string, nickname: string, name: string}>
+type IChangePhoneRequest = Request<{}, {}, {oldPhone: string, newPhone: string}>;
+type IConfirmChangeRequest = Request<{}, {}, {oldCode: string, newCode: string}>
 type IConfirmLoginRequest = Request<{}, {}, {code: string}>
 type IConfirmSignRequest = Request<{}, {}, {code: string}>
 type IResendRequest = Request<{}, {}, {type: CodeTypes, phone: string}>
@@ -69,6 +72,55 @@ class UserActionsController{
 				message: 'Error in send message to your number'
 			});
 		}
+	}
+
+	async changePhone(req: IChangePhoneRequest, res: Response){
+		//get old phone and new phone
+		const {oldPhone, newPhone} = req.body;
+
+		//find user in DB
+		const user = await UserRepository.getByPhone(oldPhone);
+
+		if(!user)
+			return res.sendStatus(422);
+
+		//send code to old and new phone
+		await sendCode(oldPhone, CodeTypes.CHANGE_PHONE, user._id);
+		await sendCode(newPhone, CodeTypes.CHANGE_PHONE, user._id);
+
+		return res.json({
+			message: 'Codes was sent on your old and new phone'
+		});
+	}
+
+	async confirmChange(req: IConfirmChangeRequest, res: Response){
+		//search codes
+		const oldCode = await CodeRepository.findByCodeAndType(req.body.oldCode, CodeTypes.CHANGE_PHONE),
+			newCode = await CodeRepository.findByCodeAndType(req.body.newCode, CodeTypes.CHANGE_PHONE);
+
+		//check that codes exists
+		if(!oldCode || !newCode)
+			return res.sendStatus(422);
+
+		//check that it's codes for one user
+		if(oldCode.user.toString() != newCode.user.toString())
+			return res.status(422).json({
+				message: 'Incorrect codes'
+			});
+
+		//update user phone
+		await UserRepository.update(oldCode.user as Schema.Types.ObjectId, {
+			phone: newCode.to
+		});
+
+		//remove codes
+		await CodeRepository.removeCode(oldCode._id);
+		await CodeRepository.removeCode(newCode._id);
+
+		//return response
+		return res.json({
+			message: 'Phone was changed'
+		});
 	}
 
 	async confirmSign(req: IConfirmSignRequest, res: Response){

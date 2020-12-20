@@ -1,30 +1,11 @@
 import {Router} from 'express';
 import {authenticate} from 'passport';
-import multer from 'multer';
 
 import UserActionsController from '../controllers/UserActions.controller';
 import * as UserActionsRequest from '../middlewares/requests/userActions.request';
 import StorageService from '../services/StorageService';
 import errorOnInvalid from '../middlewares/errorOnInvalid.middleware';
-import codeGenerator from '../helpers/codeGenerator';
 
-
-const diskStorage = multer.diskStorage({
-	destination(req, file, cb){
-		if(file.mimetype.indexOf('image') == -1)
-			return cb(new Error('Avatar can be only image'), '');
-
-		cb(null, './src/static/avatars');
-	},
-	filename(req, file, cb): void {
-		const fileExt = file.originalname.split('.').slice(-1)[0],
-			fileName = codeGenerator(24);
-
-		cb(null, `${fileName}.${fileExt}`);
-	}
-});
-
-const uploader = multer({storage: diskStorage});
 
 const userActionsRouter = Router();
 
@@ -74,6 +55,16 @@ userActionsRouter.post('/confirm/sign',
 userActionsRouter.delete('/avatar',
 	authenticate('bearer', {session: false}),
 	UserActionsController.deleteAvatar
+);
+
+userActionsRouter.post('/changePhone',
+	errorOnInvalid(UserActionsRequest.changePhoneValidators),
+	UserActionsController.changePhone
+);
+
+userActionsRouter.post('/confirm/changePhone',
+	errorOnInvalid(UserActionsRequest.confirmChangePhoneValidators),
+	UserActionsController.confirmChange
 );
 
 export default userActionsRouter;
