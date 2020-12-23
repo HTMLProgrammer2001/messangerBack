@@ -7,6 +7,7 @@ import User, {IUser} from '../../models/User.model';
 import Code from '../../models/Code.model';
 import uniqueCustomValidator from '../validators/unique.validator';
 import existsCustomValidator from '../validators/exists.validator';
+import expiresCodeValidator from '../validators/expiresCode.validator';
 
 
 const getCodeValidator = (field: string) => {
@@ -14,6 +15,7 @@ const getCodeValidator = (field: string) => {
 		.isNumeric().withMessage('Code must be numeric').bail()
 		.isLength({max: 8, min: 8}).withMessage('Code must be 8 digits').bail()
 		.custom(existsCustomValidator(Code, 'code')).withMessage('This code not exists')
+		.custom(expiresCodeValidator).withMessage('This code is expires')
 };
 
 export const loginValidators = [

@@ -1,14 +1,12 @@
 import express, {NextFunction, Request, Response, Errback, Application} from 'express';
-import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import passport from 'passport';
 import cors from 'cors';
 
-dotenv.config();
-
 import rootRouter from './routes/';
 import {connect} from './db';
 import './passport';
+import './initEnv';
 import updateSeenMiddleware from './middlewares/updateSeen.middleware';
 import logInWithoutRedirect from './middlewares/logInWithoutRedirect.middleware';
 
@@ -54,3 +52,5 @@ async function start() {
 }
 
 start();
+
+export default app;

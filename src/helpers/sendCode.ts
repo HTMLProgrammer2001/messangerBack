@@ -3,7 +3,7 @@ import {Schema} from 'mongoose';
 import {CodeTypes} from '../constants/CodeTypes';
 import CodeRepository from '../repositories/Code.repository';
 import generateCode from './codeGenerator';
-import nexmoService from '../services/Nexmo.service';
+import notifyService from '../services/NotifyService';
 
 
 const sendCode = async (phone: string, type: CodeTypes, user: Schema.Types.ObjectId) => {
@@ -17,11 +17,11 @@ const sendCode = async (phone: string, type: CodeTypes, user: Schema.Types.Objec
 
 	switch (type) {
 		case CodeTypes.SIGNIN:
-			return nexmoService.sendSignInMessage(phone, code.code);
+			return notifyService.notifySignIn(phone, code.code);
 		case CodeTypes.LOGIN:
-			return nexmoService.sendLoginMessage(phone, code.code);
+			return notifyService.notifyLogin(phone, code.code);
 		case CodeTypes.CHANGE_PHONE:
-			return nexmoService.sendChangePhoneMessage(phone, code.code);
+			return notifyService.notifyChange(phone, code.code);
 	}
 
 	//send message

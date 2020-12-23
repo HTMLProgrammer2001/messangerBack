@@ -5,5 +5,5 @@ export const connect = async (url: string | undefined) => {
 	if(!url)
 		throw Error('Cannot connect');
 
-	await mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true});
+	await mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
 };

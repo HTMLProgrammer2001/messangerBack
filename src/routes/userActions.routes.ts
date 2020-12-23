@@ -2,6 +2,7 @@ import {Router} from 'express';
 import {authenticate} from 'passport';
 
 import UserActionsController from '../controllers/UserActions.controller';
+import EditMeController from '../controllers/EditMe.controller';
 import * as UserActionsRequest from '../middlewares/requests/userActions.request';
 import StorageService from '../services/StorageService';
 import errorOnInvalid from '../middlewares/errorOnInvalid.middleware';
@@ -19,7 +20,7 @@ userActionsRouter.post('/me',
 	authenticate('bearer', {session: false}),
 	errorOnInvalid(UserActionsRequest.editMeValidators),
 	StorageService.getMiddleware('avatar'),
-	UserActionsController.editMe
+	EditMeController.editMe
 );
 
 userActionsRouter.post('/login',
@@ -54,17 +55,17 @@ userActionsRouter.post('/confirm/sign',
 
 userActionsRouter.delete('/avatar',
 	authenticate('bearer', {session: false}),
-	UserActionsController.deleteAvatar
+	EditMeController.deleteAvatar
 );
 
 userActionsRouter.post('/changePhone',
 	errorOnInvalid(UserActionsRequest.changePhoneValidators),
-	UserActionsController.changePhone
+	EditMeController.changePhone
 );
 
 userActionsRouter.post('/confirm/changePhone',
 	errorOnInvalid(UserActionsRequest.confirmChangePhoneValidators),
-	UserActionsController.confirmChange
+	EditMeController.confirmChange
 );
 
 export default userActionsRouter;
