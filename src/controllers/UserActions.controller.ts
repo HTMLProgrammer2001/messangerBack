@@ -49,7 +49,9 @@ class UserActionsController{
 		const user = await UserRepository.getByPhone(req.body.phone);
 
 		if(!user || !user.verified)
-			return res.status(422);
+			return res.status(422).json({
+				message: 'User with this phone not exists or unverified'
+			});
 
 		//send code
 		try {
@@ -94,9 +96,6 @@ class UserActionsController{
 
 		if(!code)
 			return res.status(422).json({message: 'This code is invalid'});
-
-		if(+code.expires < Date.now())
-			return res.status(422).json({message: 'Code expires'});
 
 		//update user token
 		const populatedCode = await code.populate('user').execPopulate(),

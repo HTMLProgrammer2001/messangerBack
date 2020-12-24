@@ -46,9 +46,11 @@ async function start() {
 	const PORT = process.env.PORT || 5000;
 
 	//start server
-	app.listen(PORT, () => {
-		console.log(`App is running on ${PORT} port`);
-	});
+	if(process.env.APP_ENV != 'testing'){
+		app.listen(PORT, () => {
+			console.log(`App is running on ${PORT} port`);
+		});
+	}
 }
 
 start();

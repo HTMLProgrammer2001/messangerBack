@@ -9,7 +9,7 @@
     "dev": "nodemon",
     "build": "rimraf ./build && tsc",
     "prod": "node ./build/app.js",
-    "ci": "cross-env APP_ENV=testing CI=true jest --forceExit"
+    "ci": "cross-env APP_ENV=testing CI=true jest --forceExit --maxWorkers=1"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.0",

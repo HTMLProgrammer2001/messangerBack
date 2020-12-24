@@ -17,9 +17,11 @@ describe('Test get me info', () => {
 
 	let user: any = null;
 
-	beforeAll(async () => {
+	beforeAll(async (done) => {
 		await resetDB();
 		user = await User.create(userData);
+
+		done();
 	});
 
 	jest.setTimeout(30000);
