@@ -55,7 +55,7 @@ describe('Test login confirm', () => {
 
 	it('Test login code confirm with incorrect code', async done => {
 		st(app)
-			.post('/confirm/sign')
+			.post('/confirm/login')
 			.send(codeData)
 			.expect(422)
 			.expect(res => {

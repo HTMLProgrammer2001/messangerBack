@@ -34,7 +34,17 @@ describe('Test phone change', () => {
 			.post('/changePhone')
 			.expect(422)
 			.expect(res => {
-				expect(res.body).toMatchObject({errors: [{param: 'oldPhone'}, {param: 'newPhone'}]})
+				expect(res.body.errors).toContainEqual({
+					param: 'oldPhone',
+					location: 'body',
+					msg: 'Phone must be valid phone number'
+				});
+
+				expect(res.body.errors).toContainEqual({
+					param: 'newPhone',
+					location: 'body',
+					msg: 'Phone must be valid phone number'
+				});
 			})
 			.end(done);
 	});
@@ -48,7 +58,7 @@ describe('Test phone change', () => {
 				expect(res.body).toMatchObject({
 					errors: [{
 						param: 'oldPhone',
-						msg: 'Model with this oldPhone not exists'
+						msg: 'Model with this phone are not exists'
 					}]
 				});
 			})
