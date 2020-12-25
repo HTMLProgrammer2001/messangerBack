@@ -4,7 +4,6 @@ import Message from '../models/Message.model';
 import User from '../models/User.model';
 
 
-
 const resetDB = async () => {
 	await Code.deleteMany({});
 	await Dialog.deleteMany({});
