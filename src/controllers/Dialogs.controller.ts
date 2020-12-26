@@ -5,28 +5,47 @@ import DialogRepository from '../repositories/Dialog.repository';
 import {IAuthRequest} from '../interfaces/IAuthRequest';
 
 
-type IGetDialogsQuery = {nickname?: string, page?: number, pageSize?: number};
+type IGetDialogsQuery = {page?: number, pageSize?: number};
 
-type IGetDialogsRequest = IAuthRequest & Request<{}, {}, {}, IGetDialogsQuery>;
-type IGetDialogRequest = IAuthRequest & Request<{nickname: string}>;
+type IGetDialogsByNickRequest = IAuthRequest & Request<{}, {}, {}, IGetDialogsQuery & {nickname?: string}>
+type IGetDialogsByNameRequest = IAuthRequest & Request<{name?: string} | IGetDialogsQuery>
+type IGetDialogRequest = IAuthRequest & Request<{nickname: string}>
 
 class DialogsController{
-	async getDialogs(req: IGetDialogsRequest, res: Response){
+	async getDialogsByNick(req: IGetDialogsByNickRequest, res: Response){
 		//parse data from QP
-		let {nickname, page = 1, pageSize = 5} = req.query as IGetDialogsQuery;
+		let {nickname, page = 1, pageSize = 5} = req.query;
 		page = +page;
 		pageSize = +pageSize;
 
 		//calculate paginate fields
-		const resp = await DialogRepository.paginateFor(req.user?._id, {nickname, pageSize, page}),
+		const resp = await DialogRepository.paginateByNickFor(req.user?._id, {nickname, pageSize, page}),
 			total = resp ? resp.total : 0,
-			totalPages = total / pageSize,
+			totalPages = Math.ceil(total / pageSize),
 			dialogs: IDialog[] = resp ? resp.data : [];
 
 		const message = dialogs.length ? 'Dialogs found' : 'Dialogs not found';
 
 		//return response
-		return res.json({message, page, pageSize, data: dialogs, total, totalPages});
+		return res.json({message, page, total, totalPages, pageSize, data: dialogs});
+	}
+
+	async getDialogsByName(req: IGetDialogsByNameRequest, res: Response){
+		let {name = '', page = 1, pageSize = 5} = req.query;
+		name = name as string;
+		page = +page;
+		pageSize = +pageSize;
+
+		//calculate paginate fields
+		const resp = await DialogRepository.paginateByNameFor(req.user?._id, {name, pageSize, page}),
+			total = resp ? resp.total : 0,
+			totalPages = Math.ceil(total / pageSize),
+			dialogs: IDialog[] = resp ? resp.data : [];
+
+		const message = dialogs.length ? 'Dialogs found' : 'Dialogs not found';
+
+		//return response
+		return res.json({message, page, pageSize, total, totalPages, data: dialogs});
 	}
 
 	async getDialog(req: IGetDialogRequest, res: Response){

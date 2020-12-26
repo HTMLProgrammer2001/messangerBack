@@ -8,11 +8,9 @@ import {IMessage} from './Message.model';
 export interface IDialog extends Document{
 	type: DialogTypes,
 	groupOptions?: {
-		nickname: string,
 		title: string,
 		description?: string,
-		avatar?: string,
-		open: boolean,
+		avatar?: string
 	},
 	participants: Array<{user: IUser, role?: number}>,
 	lastMessage?: IMessage | Schema.Types.ObjectId
@@ -21,15 +19,6 @@ export interface IDialog extends Document{
 const DialogSchema = new Schema<IDialog>({
 	type: Number,
 	groupOptions: {
-		open: {
-			type: Boolean,
-			default: true
-		},
-		nickname: {
-			type: String,
-			required: true,
-			unique: true
-		},
 		title: {
 			type: String,
 			required: true,

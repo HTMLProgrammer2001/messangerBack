@@ -8,12 +8,17 @@ import * as DialogRequest from '../middlewares/requests/dialogs.request';
 const dialogsRouter = Router();
 dialogsRouter.use(authenticate('bearer', {session: false}));
 
-dialogsRouter.get('/',
-	DialogRequest.getDialogsValidators,
-	DialogController.getDialogs
+dialogsRouter.get('/nickname',
+	DialogRequest.getDialogsByNickValidators,
+	DialogController.getDialogsByNick
 );
 
-dialogsRouter.get('/:nickname',
+dialogsRouter.get('/name',
+	DialogRequest.getDialogsByNameValidators,
+	DialogController.getDialogsByName
+);
+
+dialogsRouter.get('/nickname/:nickname',
 	DialogRequest.getDialogValidators,
 	DialogController.getDialog
 );

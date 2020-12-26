@@ -78,14 +78,22 @@ class UserActionsController{
 
 		//verify him
 		user.verified = true;
+		user.sessionCode = codeGenerator(12);
 		await user.save();
 
 		//remove code
 		await CodeRepository.removeCode(code._id);
 
+		//generate JWT token
+		const jwtToken = await jwt.sign({
+			sessionCode: user.sessionCode,
+			expires: Date.now() + parseInt(process.env.TOKEN_TTL || '0')
+		}, <string>process.env.JWT_SECRET);
+
 		//return response
 		return res.json({
 			message: 'Sign confirmed successfully',
+			token: jwtToken,
 			user
 		});
 	}
