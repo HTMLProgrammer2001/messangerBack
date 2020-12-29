@@ -22,7 +22,8 @@ class DialogRepository {
 						{$match: {'participants.user': {$ne: id}}},
 						{$lookup: {localField: 'participants.user', from: 'users', foreignField: '_id', as: 'user'}},
 						{$match: {[`user.${field}`]: {$regex: val, $options: 'i'}}},
-						{$addFields: {user: {$arrayElemAt: ['$user', 0]}}}
+						{$addFields: {user: {$arrayElemAt: ['$user', 0]}}},
+						{$addFields: {name: '$user.name', avatar: '$user.avatar', nick: '$user.nickname', partCount: 2}}
 					], as: 'personal'
 				}
 			},
@@ -34,7 +35,7 @@ class DialogRepository {
 					}
 				}
 			},
-			{$project: {'data.participants': 0}}
+			{$project: {'data.participants': 0, 'data.user': 0}}
 		]).sort({'user.name': 1});
 
 		return filteredDialogsReq;

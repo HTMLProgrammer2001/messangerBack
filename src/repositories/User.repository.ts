@@ -20,6 +20,10 @@ class UserRepository{
 	async getByPhone(phone: string){
 		return User.findOne({phone});
 	}
+
+	async getByNick(nick: string){
+		return User.findOne({nickname: nick});
+	}
 }
 
 export default new UserRepository();
