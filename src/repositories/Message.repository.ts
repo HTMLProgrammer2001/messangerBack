@@ -1,7 +1,13 @@
+import {Schema} from 'mongoose';
+
 import Message from '../models/Message.model';
 
 
 class MessageRepository{
+	getById(id: Schema.Types.ObjectId){
+		return Message.findById(id)
+	}
+
 	async paginateMessagesByTextFor(user: any, {text = '', page = 1, pageSize = 5}){
 		const messagesReq = Message.aggregate([
 			{$limit: 1},
@@ -12,9 +18,9 @@ class MessageRepository{
 					from: 'messages',
 					pipeline: [
 						{$match: {message: {$regex: text, $options: 'i'}}},
-						{$lookup: {localField: 'dialog', from: 'dialogs', foreignField: '_id', as: 'dialog'}},
-						{$addFields: {dialog: {$arrayElemAt: ['$dialog', 0]}}},
-						{$match: {'dialog.participants': {$elemMatch: {user}}}}
+						{$lookup: {localField: 'dialog', from: 'dialogs', foreignField: '_id', as: 'dialogModel'}},
+						{$addFields: {dialogModel: {$arrayElemAt: ['$dialogModel', 0]}}},
+						{$match: {'dialogModel.participants': {$elemMatch: {user}}}}
 					],
 					as: 'messages'
 				}

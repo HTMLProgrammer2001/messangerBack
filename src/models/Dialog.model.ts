@@ -10,7 +10,8 @@ export interface IDialog extends Document{
 	groupOptions?: {
 		title: string,
 		description?: string,
-		avatar?: string
+		avatar?: string,
+		nick: string
 	},
 	participants: Array<{user: IUser, role?: number}>,
 	lastMessage?: IMessage | Schema.Types.ObjectId
@@ -30,6 +31,10 @@ const DialogSchema = new Schema<IDialog>({
 			required: false
 		},
 		avatar: {
+			type: String,
+			required: true
+		},
+		nick: {
 			type: String,
 			required: false
 		},

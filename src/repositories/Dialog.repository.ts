@@ -8,6 +8,10 @@ import {IPaginateResponse} from '../interfaces/IPaginateResponse';
 type IPaginateFor = IPaginateResponse<IDialog> | undefined;
 
 class DialogRepository {
+	getDialogById(id: Schema.Types.ObjectId){
+		return Dialog.findById(id);
+	}
+
 	getDialogsBy(field: string, {val, pageSize, page, id}: {val: any, id: any, pageSize: number, page: number}): any{
 		//make request
 		const filteredDialogsReq = Dialog.aggregate([
@@ -18,12 +22,11 @@ class DialogRepository {
 				$lookup: {
 					from: 'dialogs', pipeline: [
 						{$match: {type: DialogTypes.PERSONAL, participants: {$elemMatch: {user: id}}}},
-						{$unwind: '$participants'},
-						{$match: {'participants.user': {$ne: id}}},
-						{$lookup: {localField: 'participants.user', from: 'users', foreignField: '_id', as: 'user'}},
-						{$match: {[`user.${field}`]: {$regex: val, $options: 'i'}}},
-						{$addFields: {user: {$arrayElemAt: ['$user', 0]}}},
-						{$addFields: {name: '$user.name', avatar: '$user.avatar', nick: '$user.nickname', partCount: 2}}
+						{$addFields: {uParticipants: '$participants'}},
+						{$unwind: '$uParticipants'},
+						{$match: {'uParticipants.user': {$ne: id}}},
+						{$lookup: {localField: 'uParticipants.user', from: 'users', foreignField: '_id', as: 'user'}},
+						{$match: {[`user.${field}`]: {$regex: val, $options: 'i'}}}
 					], as: 'personal'
 				}
 			},
@@ -35,7 +38,7 @@ class DialogRepository {
 					}
 				}
 			},
-			{$project: {'data.participants': 0, 'data.user': 0}}
+			{$project: {'data.uParticipants': 0, 'data.user': 0}}
 		]).sort({'user.name': 1});
 
 		return filteredDialogsReq;

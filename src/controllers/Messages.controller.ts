@@ -2,12 +2,13 @@ import {Request, Response} from 'express';
 
 import MessageRepository from '../repositories/Message.repository';
 import {IMessage} from '../models/Message.model';
+import MessagesGroupResource from '../resources/MessagesGroupResource';
 
 
 type IGetMessagesByTextReq = Request<{}, {}, {}, {text?: string, page?: number, pageSize?: number}>;
 
 class MessagesController{
-	async getMessages(req: IGetMessagesByTextReq, res: Response){
+	async getMessagesByText(req: IGetMessagesByTextReq, res: Response){
 		//parse data from QP
 		let {text, page = 1, pageSize = 5} = req.query;
 		page = +page;
@@ -22,10 +23,13 @@ class MessagesController{
 			totalPages = Math.ceil(total / pageSize),
 			messages: IMessage[] = resp ? resp.data : [];
 
-		const msg = messages.length ? 'Messages found' : 'Messages not found';
+		const msg = messages.length ? 'Messages found' : 'Messages not found',
+			data = new MessagesGroupResource(messages);
+
+		await data.json();
 
 		//return response
-		return res.json({message: msg, page, totalPages, pageSize, data: messages, total});
+		return res.json({message: msg, page, totalPages, pageSize, total, data});
 	}
 }
 

@@ -1,8 +1,10 @@
 import {Request, Response} from 'express';
 
 import {IDialog} from '../models/Dialog.model';
-import DialogRepository from '../repositories/Dialog.repository';
 import {IAuthRequest} from '../interfaces/IAuthRequest';
+import DialogRepository from '../repositories/Dialog.repository';
+import DialogsGroupResource from '../resources/DialogsGroupResource';
+import DialogResource from '../resources/DialogResource';
 
 
 type IGetDialogsQuery = {page?: number, pageSize?: number};
@@ -24,10 +26,16 @@ class DialogsController{
 			totalPages = Math.ceil(total / pageSize),
 			dialogs: IDialog[] = resp ? resp.data : [];
 
-		const message = dialogs.length ? 'Dialogs found' : 'Dialogs not found';
+		const message = dialogs.length ? 'Dialogs found' : 'Dialogs not found',
+			data = new DialogsGroupResource(dialogs);
+
+		await data.json();
 
 		//return response
-		return res.json({message, page, total, totalPages, pageSize, data: dialogs});
+		return res.json({
+			message, page, total,
+			totalPages, pageSize, data
+		});
 	}
 
 	async getDialogsByName(req: IGetDialogsByNameRequest, res: Response){
@@ -42,21 +50,27 @@ class DialogsController{
 			totalPages = Math.ceil(total / pageSize),
 			dialogs: IDialog[] = resp ? resp.data : [];
 
-		const message = dialogs.length ? 'Dialogs found' : 'Dialogs not found';
+		const message = dialogs.length ? 'Dialogs found' : 'Dialogs not found',
+			data = new DialogsGroupResource(dialogs);
+
+		await data.json();
 
 		//return response
-		return res.json({message, page, pageSize, total, totalPages, data: dialogs});
+		return res.json({
+			message, page, pageSize,
+			total, totalPages, data
+		});
 	}
 
 	async getDialog(req: IGetDialogRequest, res: Response){
-		const dialog = await DialogRepository.getDialogByNick(req.params.nickname);
+		const dialog = await DialogRepository.getDialogByNick(req.params.nickname),
+			data = new DialogResource(dialog);
+
+		await data.json();
 
 		//send response
 		if(dialog)
-			return res.json({
-				message: 'Dialog found',
-				data: dialog
-			});
+			return res.json({message: 'Dialog found', data});
 
 		return res.status(422).json({message: 'No dialog with this nick'});
 	}

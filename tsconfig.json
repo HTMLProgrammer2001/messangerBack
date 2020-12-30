@@ -10,7 +10,8 @@
 		"strict": true,
 		"noImplicitAny": true,
 		"esModuleInterop": true,
-		"resolveJsonModule": true
+		"resolveJsonModule": true,
+		"strictNullChecks": false
 	},
 	"include": ["src/**/*.ts"]
 }
