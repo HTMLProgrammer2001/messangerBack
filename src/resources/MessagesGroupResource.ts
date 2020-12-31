@@ -6,7 +6,7 @@ import MessageResource from './MessageResource';
 
 class MessagesGroupResource extends GroupResource<IMessage>{
 	async apply(item: IMessage){
-		const message = new MessageResource(item);
+		const message = new MessageResource(item, this.userID);
 		await message.json();
 		return message.toJSON();
 	}

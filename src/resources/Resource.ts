@@ -1,7 +1,7 @@
 abstract class Resource<T>{
 	private jsonData: Object = null;
 	protected abstract getData(): Object;
-	constructor(protected data: T){}
+	constructor(protected data: T, protected userID: any){}
 
 	async json(){
 		this.jsonData = await this.getData();

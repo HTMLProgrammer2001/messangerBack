@@ -1,6 +1,6 @@
 abstract class GroupResource<T>{
 	private jsonData: Object = null;
-	constructor(protected data: T[]){};
+	constructor(protected data: T[], protected userID: any){};
 	abstract apply(item: T): Object;
 
 	async json(){
@@ -8,7 +8,6 @@ abstract class GroupResource<T>{
 	}
 
 	toJSON(){
-		console.log(this.jsonData);
 		return this.jsonData;
 	}
 }

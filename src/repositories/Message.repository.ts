@@ -32,11 +32,21 @@ class MessageRepository{
 						total: {$size: '$messages'}
 					}
 				}
-			}
-		]).sort({'data.dialog': 1});
+			},
+			{$project: {'data.dialogModel': 0}}
+		]).sort({'data.time': 1});
 
 		const messages = await messagesReq.exec();
 		return messages[0];
+	}
+
+	async getUnreadMessagesFor(user: Schema.Types.ObjectId, dialog: Schema.Types.ObjectId){
+		const messagesReq = Message.aggregate([
+			{$match: {dialog, readBy: {$nin: [user]}, deletedFor: {$nin: [user]}}}
+		]).sort({time: 1});
+
+		const messages = await messagesReq.exec();
+		return messages;
 	}
 }
 

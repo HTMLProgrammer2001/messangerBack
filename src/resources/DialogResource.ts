@@ -8,19 +8,22 @@ import UserRepository from '../repositories/User.repository';
 
 
 class DialogResource extends Resource<IDialog>{
-	constructor(data: IDialog, private withMessage = true){
-		super(data);
+	constructor(data: IDialog, userID: any, private withMessage = true){
+		super(data, userID);
 	}
 
 	async getData(){
 		let messageModel = await MessageRepository.getById(this.data.lastMessage as any),
 			lastMessage: any = this.data.lastMessage;
 
-		//load message
+		//load last message
 		if(messageModel && this.withMessage) {
-			lastMessage = new MessageResource(messageModel, false);
+			lastMessage = new MessageResource(messageModel, this.userID, false);
 			await lastMessage.json();
 		}
+
+		//get unread messages count
+		const unread = await MessageRepository.getUnreadMessagesFor(this.userID, this.data._id);
 
 		const opts = this.data.type == DialogTypes.PERSONAL ?
 			await this.getOptsForPersonal() : await this.getOptsForChat();
@@ -30,6 +33,7 @@ class DialogResource extends Resource<IDialog>{
 			type: this.data.type,
 			partCount: this.data.participants.length,
 			groupOptions: this.data.groupOptions,
+			unread: unread.length,
 			lastMessage,
 			...opts
 		};
@@ -38,6 +42,10 @@ class DialogResource extends Resource<IDialog>{
 	private async getOptsForPersonal(): Promise<Object>{
 		//get data of another user
 		let userID: any = this.data.participants[0].user;
+
+		if(userID != this.userID)
+			userID = this.data.participants[1].user;
+
 		const userModel = await UserRepository.getById(userID);
 
 		//return data

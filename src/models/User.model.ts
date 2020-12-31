@@ -13,7 +13,8 @@ export interface IUserData {
 	role?: Roles,
 	verified?: boolean,
 	lastSeen?: Date,
-	options?: Object
+	options?: Object,
+	friends?: string[]
 }
 
 export interface IUser extends Document, IUserData{}
@@ -67,6 +68,11 @@ const UserSchema = new Schema({
 	options: {
 		type: Object,
 		default: {}
+	},
+	friends: {
+		type: [String],
+		default: [],
+		ref: 'User'
 	}
 });
 

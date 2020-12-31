@@ -24,7 +24,7 @@ class MessagesController{
 			messages: IMessage[] = resp ? resp.data : [];
 
 		const msg = messages.length ? 'Messages found' : 'Messages not found',
-			data = new MessagesGroupResource(messages);
+			data = new MessagesGroupResource(messages, req.user._id);
 
 		await data.json();
 

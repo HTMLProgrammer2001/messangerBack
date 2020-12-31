@@ -8,8 +8,8 @@ import DialogRepository from '../repositories/Dialog.repository';
 
 
 class MessageResource extends Resource<IMessage>{
-	constructor(data: IMessage, private withDialog: boolean = true){
-		super(data);
+	constructor(data: IMessage, userID: any, private withDialog: boolean = true){
+		super(data, userID);
 	}
 
 	async getData(): Promise<Object> {
@@ -19,7 +19,7 @@ class MessageResource extends Resource<IMessage>{
 
 		//load author
 		if(authorModel) {
-			author = new UserResource(authorModel);
+			author = new UserResource(authorModel, this.userID);
 			await author.json();
 		}
 
@@ -28,7 +28,7 @@ class MessageResource extends Resource<IMessage>{
 			let dialogModel = await DialogRepository.getDialogById(this.data.dialog as any);
 
 			if (dialogModel) {
-				dialog = new DialogResource(dialogModel, false);
+				dialog = new DialogResource(dialogModel, this.userID, false);
 				await dialog.json();
 			}
 		}

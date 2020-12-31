@@ -27,7 +27,7 @@ class DialogsController{
 			dialogs: IDialog[] = resp ? resp.data : [];
 
 		const message = dialogs.length ? 'Dialogs found' : 'Dialogs not found',
-			data = new DialogsGroupResource(dialogs);
+			data = new DialogsGroupResource(dialogs, req.user._id);
 
 		await data.json();
 
@@ -51,7 +51,7 @@ class DialogsController{
 			dialogs: IDialog[] = resp ? resp.data : [];
 
 		const message = dialogs.length ? 'Dialogs found' : 'Dialogs not found',
-			data = new DialogsGroupResource(dialogs);
+			data = new DialogsGroupResource(dialogs, req.user?._id);
 
 		await data.json();
 
@@ -64,7 +64,7 @@ class DialogsController{
 
 	async getDialog(req: IGetDialogRequest, res: Response){
 		const dialog = await DialogRepository.getDialogByNick(req.params.nickname),
-			data = new DialogResource(dialog);
+			data = new DialogResource(dialog, req.user._id);
 
 		await data.json();
 

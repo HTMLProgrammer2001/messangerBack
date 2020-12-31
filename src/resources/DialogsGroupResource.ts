@@ -5,8 +5,9 @@ import DialogResource from './DialogResource';
 
 class DialogsGroupResource extends GroupResource<IDialog>{
 	async apply(item: IDialog) {
-		const data = new DialogResource(item);
+		const data = new DialogResource(item, this.userID);
 		await data.json();
+
 		return data.toJSON();
 	}
 }

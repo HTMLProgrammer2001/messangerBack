@@ -10,7 +10,9 @@ export interface IMessage extends Document{
 	type: number,
 	message?: string,
 	url?: string,
-	time?: Date
+	time?: Date,
+	readBy?: string[],
+	deletedFor?: string[]
 }
 
 const MessageSchema = new Schema<IMessage>({
@@ -34,6 +36,16 @@ const MessageSchema = new Schema<IMessage>({
 	time: {
 		type: Date,
 		default: new Date()
+	},
+	readBy: {
+		type: [String],
+		default: [],
+		ref: 'User'
+	},
+	deletedFor: {
+		type: [String],
+		default: [],
+		ref: 'User'
 	}
 });
 
