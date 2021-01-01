@@ -1,9 +1,14 @@
 import {Schema} from 'mongoose';
 
-import Message from '../models/Message.model';
+import Message, {IMessageData} from '../models/Message.model';
 
 
 class MessageRepository{
+	async create(data: IMessageData){
+		const message = new Message(data);
+		return message.save();
+	}
+
 	getById(id: Schema.Types.ObjectId){
 		return Message.findById(id)
 	}
@@ -20,7 +25,8 @@ class MessageRepository{
 						{$match: {message: {$regex: text, $options: 'i'}}},
 						{$lookup: {localField: 'dialog', from: 'dialogs', foreignField: '_id', as: 'dialogModel'}},
 						{$addFields: {dialogModel: {$arrayElemAt: ['$dialogModel', 0]}}},
-						{$match: {'dialogModel.participants': {$elemMatch: {user}}}}
+						{$match: {'dialogModel.participants': {$elemMatch: {user}}}},
+						{$sort: {time: -1}}
 					],
 					as: 'messages'
 				}
@@ -34,7 +40,7 @@ class MessageRepository{
 				}
 			},
 			{$project: {'data.dialogModel': 0}}
-		]).sort({'data.time': 1});
+		]);
 
 		const messages = await messagesReq.exec();
 		return messages[0];

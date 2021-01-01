@@ -70,9 +70,9 @@ class DialogsController{
 
 		//send response
 		if(dialog)
-			return res.json({message: 'Dialog found', data});
+			return res.json({message: 'Dialog found', dialog: data});
 
-		return res.status(422).json({message: 'No dialog with this nick'});
+		return res.status(404).json({message: 'No dialog with this nick'});
 	}
 }
 

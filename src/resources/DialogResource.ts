@@ -52,7 +52,8 @@ class DialogResource extends Resource<IDialog>{
 		return {
 			name: userModel?.name,
 			avatar: userModel?.avatar,
-			nick: userModel?.nickname
+			nick: userModel?.nickname,
+			user: userID
 		};
 	}
 

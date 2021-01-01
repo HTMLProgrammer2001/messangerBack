@@ -4,7 +4,7 @@ import {IDialog} from './Dialog.model';
 import {IUser} from './User.model';
 
 
-export interface IMessage extends Document{
+export interface IMessageData {
 	dialog: IDialog | Schema.Types.ObjectId,
 	author: IUser | Schema.Types.ObjectId,
 	type: number,
@@ -14,6 +14,8 @@ export interface IMessage extends Document{
 	readBy?: string[],
 	deletedFor?: string[]
 }
+
+export interface IMessage extends Document, IMessageData {}
 
 const MessageSchema = new Schema<IMessage>({
 	dialog: {

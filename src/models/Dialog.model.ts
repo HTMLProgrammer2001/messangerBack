@@ -5,7 +5,7 @@ import {DialogTypes} from '../constants/DialogTypes';
 import {IMessage} from './Message.model';
 
 
-export interface IDialog extends Document{
+export interface IDialogData {
 	type: DialogTypes,
 	groupOptions?: {
 		title: string,
@@ -17,26 +17,30 @@ export interface IDialog extends Document{
 	lastMessage?: IMessage | Schema.Types.ObjectId
 }
 
+export interface IDialog extends Document, IDialogData{}
+
 const DialogSchema = new Schema<IDialog>({
 	type: Number,
 	groupOptions: {
-		title: {
-			type: String,
-			required: true,
-			minlength: 4,
-			maxlength: 32
-		},
-		description: {
-			type: String,
-			required: false
-		},
-		avatar: {
-			type: String,
-			required: true
-		},
-		nick: {
-			type: String,
-			required: false
+		type: {
+			title: {
+				type: String,
+				required: true,
+				minlength: 4,
+				maxlength: 32
+			},
+			description: {
+				type: String,
+				required: false
+			},
+			avatar: {
+				type: String,
+				required: true
+			},
+			nick: {
+				type: String,
+				required: false
+			}
 		},
 		required: false
 	},

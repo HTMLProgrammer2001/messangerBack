@@ -29,7 +29,7 @@ app.use('/', rootRouter);
 app.use((err: Errback, req: Request, res: Response, next: NextFunction) => {
 	if(err) {
 		res.status(500);
-		res.json({error: err});
+		res.json({error: err.name});
 	}
 	else
 		next();
@@ -37,6 +37,7 @@ app.use((err: Errback, req: Request, res: Response, next: NextFunction) => {
 
 //not found handler
 app.use((req: Request, res: Response, next: NextFunction) => {
+	console.log('Error');
 	res.sendStatus(404);
 });
 
