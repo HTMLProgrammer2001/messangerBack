@@ -37,7 +37,6 @@ app.use((err: Errback, req: Request, res: Response, next: NextFunction) => {
 
 //not found handler
 app.use((req: Request, res: Response, next: NextFunction) => {
-	console.log('Error');
 	res.sendStatus(404);
 });
 

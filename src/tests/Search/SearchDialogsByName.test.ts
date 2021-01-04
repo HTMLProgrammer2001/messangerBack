@@ -12,7 +12,7 @@ import DialogRepository from '../../repositories/Dialog.repository';
 import MessageRepository from '../../repositories/Message.repository';
 
 
-describe('Test search by nick', () => {
+describe('Test search by name', () => {
 	let userData: IUserData[] = [
 		{nickname: 'test', name: 'Test', phone: '+380666876892', sessionCode: '12345678'},
 		{nickname: 'user', name: 'Yura', phone: '+380506564229', sessionCode: '87654321'},
@@ -67,8 +67,8 @@ describe('Test search by nick', () => {
 
 		//make api call
 		st(app)
-			.get('/dialogs/nickname')
-			.query({nickname: 'u'})
+			.get('/dialogs/name')
+			.query({name: 'u'})
 			.set('Authorization', `Bearer ${token}`)
 			.expect(200)
 			.expect(res => {
@@ -82,19 +82,19 @@ describe('Test search by nick', () => {
 				expect(res.body.data).toHaveLength(2);
 
 				//check correct dialogs and order
-				expect(res.body.data[0]).toMatchObject({nick: userData[2].nickname});
+				expect(res.body.data[0]).toMatchObject({name: userData[2].name});
 				expect(res.body.data[0].lastMessage).toBeTruthy();
 
-				expect(res.body.data[1]).toMatchObject({nick: userData[1].nickname});
+				expect(res.body.data[1]).toMatchObject({name: userData[1].name});
 			})
 			.end(done);
 	});
 
-	it('Test search dialogs by nick unauthorized', async done => {
+	it('Test search unauthorized', async done => {
 		//make api call
 		st(app)
 			.get('/dialogs/nickname')
-			.query({nickname: 'u'})
+			.query({name: 'u'})
 			.expect(401)
 			.end(done);
 
@@ -109,8 +109,8 @@ describe('Test search by nick', () => {
 
 		//make api call
 		st(app)
-			.get('/dialogs/nickname')
-			.query({nickname: 'notFound'})
+			.get('/dialogs/name')
+			.query({name: 'notFound'})
 			.set('Authorization', `Bearer ${token}`)
 			.expect(200)
 			.expect(res => {

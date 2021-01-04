@@ -13,6 +13,11 @@ class DialogRepository {
 		return dialog.save();
 	}
 
+	async update(id: Schema.Types.ObjectId, data: Partial<IDialogData>){
+		await Dialog.findByIdAndUpdate(id, data);
+		return this.getDialogById(id);
+	}
+
 	getDialogById(id: Schema.Types.ObjectId){
 		return Dialog.findById(id);
 	}
@@ -43,7 +48,9 @@ class DialogRepository {
 						{$unwind: '$uParticipants'},
 						{$match: {'uParticipants.user': {$ne: id}}},
 						{$lookup: {localField: 'uParticipants.user', from: 'users', foreignField: '_id', as: 'user'}},
-						{$match: {[`user.${field}`]: {$regex: val, $options: 'i'}}}
+						{$match: {[`user.${field}`]: {$regex: val, $options: 'i'}}},
+						{$lookup: {localField: 'lastMessage', from: 'messages', foreignField: '_id', as: 'message'}},
+						{$sort: {'message.time': -1}}
 					], as: 'personal'
 				}
 			},
@@ -55,8 +62,8 @@ class DialogRepository {
 					}
 				}
 			},
-			{$project: {'data.uParticipants': 0, 'data.user': 0}}
-		]).sort({'user.name': 1});
+			{$project: {'data.uParticipants': 0, 'data.user': 0, 'data.message': 0}}
+		]);
 
 		return filteredDialogsReq;
 	}
