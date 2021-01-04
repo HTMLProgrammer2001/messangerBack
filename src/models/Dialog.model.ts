@@ -1,8 +1,6 @@
 import {Schema, Document, model} from 'mongoose';
 
-import {IUser} from './User.model';
 import {DialogTypes} from '../constants/DialogTypes';
-import {IMessage} from './Message.model';
 
 
 export interface IDialogData {
@@ -13,8 +11,8 @@ export interface IDialogData {
 		avatar?: string,
 		nick: string
 	},
-	participants: Array<{user: IUser, role?: number}>,
-	lastMessage?: IMessage | Schema.Types.ObjectId
+	participants: Array<{user: Schema.Types.ObjectId, role?: number}>,
+	lastMessage?: Schema.Types.ObjectId
 }
 
 export interface IDialog extends Document, IDialogData{}

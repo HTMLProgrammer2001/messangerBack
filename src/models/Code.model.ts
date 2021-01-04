@@ -1,6 +1,5 @@
 import {Schema, Document, model} from 'mongoose';
 
-import {IUser} from './User.model';
 import {CodeTypes} from '../constants/CodeTypes';
 
 
@@ -8,7 +7,7 @@ export interface ICodeData {
 	code: string,
 	to: string,
 	expires: Date,
-	user: IUser | Schema.Types.ObjectId,
+	user: Schema.Types.ObjectId,
 	type: CodeTypes
 }
 

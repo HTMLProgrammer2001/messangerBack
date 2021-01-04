@@ -1,7 +1,8 @@
 export enum MessageTypes {
-	MESSAGE,
-	IMAGE,
+	MESSAGE, 
+	IMAGE, 
 	VIDEO,
-	DOCUMENT,
-	AUDIO
+	DOCUMENT, 
+	AUDIO, 
+	FRIEND
 }

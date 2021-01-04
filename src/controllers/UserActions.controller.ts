@@ -1,13 +1,13 @@
 import {Request, Response} from 'express';
 import jwt from 'jsonwebtoken';
 
-import {IUser} from '../models/User.model';
+import {CodeTypes} from '../constants/CodeTypes';
+
 import UserRepository from '../repositories/User.repository';
 import CodeRepository from '../repositories/Code.repository';
 import codeGenerator from '../helpers/codeGenerator';
 import sendCode from '../helpers/sendCode';
-import {CodeTypes} from '../constants/CodeTypes';
-import {IAuthRequest} from '../interfaces/IAuthRequest';
+import UserResource from '../resources/UserResource';
 
 
 type ILoginRequest = Request<{}, {}, {phone: string}>
@@ -15,7 +15,7 @@ type ISignInRequest = Request<{}, {}, {phone: string, nickname: string, name: st
 type IConfirmLoginRequest = Request<{}, {}, {code: string}>
 type IConfirmSignRequest = Request<{}, {}, {code: string}>
 type IResendRequest = Request<{}, {}, {type: CodeTypes, phone: string}>
-type ILogoutRequest = IAuthRequest
+type ILogoutRequest = Request
 
 class UserActionsController{
 	async signIn(req: ISignInRequest, res: Response){
@@ -72,14 +72,13 @@ class UserActionsController{
 		if(!code)
 			return res.sendStatus(422);
 
-		//get code user
-		const populatedCode = await code.populate('user').execPopulate(),
-			user = populatedCode.user as IUser;
-
 		//verify him
-		user.verified = true;
-		user.sessionCode = codeGenerator(12);
-		await user.save();
+		await UserRepository.update(code.user, {
+			verified: true,
+			sessionCode: codeGenerator(12)
+		});
+
+		const user = await UserRepository.getById(code.user);
 
 		//remove code
 		await CodeRepository.removeCode(code._id);
@@ -93,8 +92,7 @@ class UserActionsController{
 		//return response
 		return res.json({
 			message: 'Sign confirmed successfully',
-			token: jwtToken,
-			user
+			token: jwtToken, user
 		});
 	}
 
@@ -105,14 +103,10 @@ class UserActionsController{
 		if(!code)
 			return res.status(422).json({message: 'This code is invalid'});
 
-		//update user token
-		const populatedCode = await code.populate('user').execPopulate(),
-			user = populatedCode.user as IUser;
+		await UserRepository.update(code.user, {sessionCode: codeGenerator(12)});
+		await CodeRepository.removeCode(code._id);
 
-		user.sessionCode = codeGenerator(12);
-
-		await user.save();
-		await populatedCode.remove();
+		const user = await UserRepository.getById(code.user);
 
 		//generate JWT token
 		const jwtToken = await jwt.sign({
@@ -123,8 +117,7 @@ class UserActionsController{
 		//return token
 		return res.json({
 			message: 'Login successfully',
-			token: jwtToken,
-			user
+			token: jwtToken, user
 		});
 	}
 
@@ -151,9 +144,7 @@ class UserActionsController{
 	async logout(req: ILogoutRequest, res: Response){
 		if(req.user) {
 			//logout user
-			req.user.sessionCode = undefined;
-			await req.user.save();
-
+			await UserRepository.update(req.user._id, {sessionCode: undefined});
 			return res.json({message: 'You were successfully logged out'})
 		}
 
@@ -162,7 +153,14 @@ class UserActionsController{
 	}
 
 	async me(req: Request, res: Response){
-		return res.json(req.user);
+		if(!req.user)
+			return res.json(null);
+
+		//create resource
+		const userData = new UserResource(req.user, req.user._id);
+		await userData.json();
+
+		return res.json(userData.toJSON());
 	}
 }
 

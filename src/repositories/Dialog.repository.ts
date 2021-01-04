@@ -2,7 +2,7 @@ import {Schema} from 'mongoose';
 
 import Dialog, {IDialog, IDialogData} from '../models/Dialog.model';
 import {DialogTypes} from '../constants/DialogTypes';
-import {IPaginateResponse} from '../interfaces/IPaginateResponse';
+import {IPaginateResponse} from '../interfaces/IPaginateData';
 
 
 type IPaginateFor = IPaginateResponse<IDialog> | undefined;
@@ -22,16 +22,22 @@ class DialogRepository {
 		return Dialog.findById(id);
 	}
 
-	async getDialogByNick(nickname = '') {
-		const chat = await Dialog.findOne({type: DialogTypes.CHAT, nickname}),
-			personal = await Dialog.aggregate([
+	async getDialogByNick(id: string, nickname = '') {
+		//find chat with this nick
+		const chat = await Dialog.findOne({type: DialogTypes.CHAT, nickname});
+
+		if(chat)
+			return chat;
+
+		//find personal chat with nick
+		const personal = await Dialog.aggregate([
 				{$match: {type: DialogTypes.PERSONAL}},
 				{$lookup: {from: 'users', localField: 'participants.user', foreignField: '_id', as: 'users'}},
-				{$match: {users: {$elemMatch: {nickname}}}},
+				{$match: {users: {$elemMatch: {nickname, _id: {$ne: id}}}}},
 				{$project: {users: 0}}
 			]);
 
-		return personal[0] || chat;
+		return personal[0];
 	}
 
 	getDialogsBy(field: string, {val, pageSize, page, id}: {val: any, id: any, pageSize: number, page: number}): any{

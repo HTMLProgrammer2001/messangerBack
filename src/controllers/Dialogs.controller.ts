@@ -1,19 +1,65 @@
 import {Request, Response} from 'express';
 
 import {IDialog} from '../models/Dialog.model';
-import {IAuthRequest} from '../interfaces/IAuthRequest';
 import DialogRepository from '../repositories/Dialog.repository';
+import UserRepository from '../repositories/User.repository';
+import FriendReqRepository from '../repositories/FriendRequest.repository';
+import MessageRepository from '../repositories/Message.repository';
+
 import DialogsGroupResource from '../resources/DialogsGroupResource';
 import DialogResource from '../resources/DialogResource';
+import {DialogTypes} from '../constants/DialogTypes';
+import {MessageTypes} from '../constants/MessageTypes';
 
 
 type IGetDialogsQuery = {page?: number, pageSize?: number};
 
-type IGetDialogsByNickRequest = IAuthRequest & Request<{}, {}, {}, IGetDialogsQuery & {nickname?: string}>
-type IGetDialogsByNameRequest = IAuthRequest & Request<{name?: string} | IGetDialogsQuery>
-type IGetDialogRequest = IAuthRequest & Request<{nickname: string}>
+type IGetDialogsByNickRequest = Request<{}, {}, {}, IGetDialogsQuery & {nickname?: string}>
+type IGetDialogsByNameRequest = Request<{name?: string} | IGetDialogsQuery>
+type IGetDialogRequest = Request<{nickname: string}>
+type ICreatePersonal = Request<{}, {}, {nick: string}>
 
 class DialogsController{
+	async createPersonal(req: ICreatePersonal, res: Response){
+		const user = req.user,
+			{nick = ''} = req.body;
+
+		//search user with this nick
+		const anotherUser = await UserRepository.getByNick(nick);
+
+		if(!anotherUser)
+			return res.status(404).json({message: 'No user with this nick'});
+
+		//search user in friends
+		if(user.friends.includes(anotherUser._id))
+			return res.status(422).json({message: 'This user already in your friends'});
+
+		//create dialog and friend request
+		let dialog = await DialogRepository.getDialogByNick(anotherUser.nickname),
+			friendReq = await FriendReqRepository.create({
+				from: user._id,
+				to: anotherUser._id
+			});
+
+		if(!dialog)
+			dialog = await DialogRepository.create({
+				type: DialogTypes.PERSONAL,
+				participants: [{user: user._id}, {user: anotherUser._id}]
+			});
+
+		//create message
+		await MessageRepository.create({
+			author: user._id,
+			dialog: dialog._id,
+			type: MessageTypes.FRIEND,
+			options: {friendReq: friendReq._id}
+		});
+
+		return res.json({
+			message: 'Friend request was sent'
+		});
+	}
+
 	async getDialogsByNick(req: IGetDialogsByNickRequest, res: Response){
 		//parse data from QP
 		let {nickname, page = 1, pageSize = 5} = req.query;
@@ -63,7 +109,7 @@ class DialogsController{
 	}
 
 	async getDialog(req: IGetDialogRequest, res: Response){
-		const dialog = await DialogRepository.getDialogByNick(req.params.nickname),
+		const dialog = await DialogRepository.getDialogByNick(req.user._id, req.params.nickname),
 			data = new DialogResource(dialog, req.user._id);
 
 		await data.json();

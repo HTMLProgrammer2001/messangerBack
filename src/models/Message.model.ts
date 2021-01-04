@@ -1,18 +1,16 @@
 import {Document, model, Schema} from 'mongoose';
 
-import {IDialog} from './Dialog.model';
-import {IUser} from './User.model';
-
 
 export interface IMessageData {
-	dialog: IDialog | Schema.Types.ObjectId,
-	author: IUser | Schema.Types.ObjectId,
+	dialog: Schema.Types.ObjectId,
+	author: Schema.Types.ObjectId,
 	type: number,
 	message?: string,
 	url?: string,
 	time?: Date,
 	readBy?: string[],
-	deletedFor?: string[]
+	deletedFor?: string[],
+	options?: Record<string, any>
 }
 
 export interface IMessage extends Document, IMessageData {}
@@ -48,6 +46,10 @@ const MessageSchema = new Schema<IMessage>({
 		type: [String],
 		default: [],
 		ref: 'User'
+	},
+	options: {
+		type: Object,
+		default: {}
 	}
 });
 

@@ -13,7 +13,7 @@ class DialogResource extends Resource<IDialog>{
 	}
 
 	async getData(){
-		let messageModel = await MessageRepository.getById(this.data.lastMessage as any),
+		let messageModel = await MessageRepository.getById(this.data.lastMessage),
 			lastMessage: any = this.data.lastMessage;
 
 		//load last message
@@ -41,7 +41,7 @@ class DialogResource extends Resource<IDialog>{
 
 	private async getOptsForPersonal(): Promise<Object>{
 		//get data of another user
-		let userID: any = this.data.participants[0].user;
+		let userID = this.data.participants[0].user;
 
 		if(userID != this.userID)
 			userID = this.data.participants[1].user;

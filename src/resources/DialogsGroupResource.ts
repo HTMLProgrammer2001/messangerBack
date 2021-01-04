@@ -1,4 +1,5 @@
 import {IDialog} from '../models/Dialog.model';
+
 import GroupResource from './GroupResource';
 import DialogResource from './DialogResource';
 

@@ -1,12 +1,19 @@
 import {Schema} from 'mongoose';
 
 import Message, {IMessageData} from '../models/Message.model';
+import DialogRepository from './Dialog.repository';
 
 
 class MessageRepository{
 	async create(data: IMessageData){
+		//create message
 		const message = new Message(data);
-		return message.save();
+		await message.save();
+
+		//add message as last to dialog
+		await DialogRepository.update(data.dialog, {lastMessage: message._id});
+
+		return message;
 	}
 
 	getById(id: Schema.Types.ObjectId){
@@ -48,11 +55,11 @@ class MessageRepository{
 
 	async getUnreadMessagesFor(user: Schema.Types.ObjectId, dialog: Schema.Types.ObjectId){
 		const messagesReq = Message.aggregate([
-			{$match: {dialog, readBy: {$nin: [user]}, deletedFor: {$nin: [user]}}}
-		]).sort({time: 1});
+			{$match: {dialog, readBy: {$nin: [user]}, deletedFor: {$nin: [user]}}},
+			{$sort: {time: -1}}
+		]);
 
-		const messages = await messagesReq.exec();
-		return messages;
+		return messagesReq.exec();
 	}
 }
 

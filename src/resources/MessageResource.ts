@@ -25,7 +25,7 @@ class MessageResource extends Resource<IMessage>{
 
 		//load dialog if need
 		if(this.withDialog) {
-			let dialogModel = await DialogRepository.getDialogById(this.data.dialog as any);
+			let dialogModel = await DialogRepository.getDialogById(this.data.dialog);
 
 			if (dialogModel) {
 				dialog = new DialogResource(dialogModel, this.userID, false);

@@ -1,19 +1,17 @@
 import {Request, Response} from 'express';
 import {Schema} from "mongoose";
 
-import {IAuthRequest} from '../interfaces/IAuthRequest';
 import {CodeTypes} from '../constants/CodeTypes';
 import sendCode from '../helpers/sendCode';
 
 import UserRepository from '../repositories/User.repository';
 import CodeRepository from '../repositories/Code.repository';
-import User, {IUserData} from '../models/User.model';
 import StorageService from '../services/StorageService';
 
 
 type IChangePhoneRequest = Request<{}, {}, {oldPhone: string, newPhone: string}>
 type IConfirmChangeRequest = Request<{}, {}, {oldCode: string, newCode: string}>
-type IEditMeRequest = IAuthRequest & Request<{}, {}, {
+type IEditMeRequest = Request<{}, {}, {
 	phone: string,
 	nickname: string,
 	name: string,
@@ -72,60 +70,48 @@ class EditMeController{
 	}
 
 	async editMe(req: IEditMeRequest, res: Response){
-		if(!req.user)
+		const user = req.user;
+
+		if(!user)
 			return res.sendStatus(403);
 
-		const {name, description, nickname} = req.body,
-			newDoc: Partial<IUserData> = {};
-
-		//parse data to change
-		if(name)
-			newDoc['name'] = name;
-
-		if(description)
-			newDoc['description'] = description;
-
-		if(nickname)
-			newDoc['nickname'] = nickname;
+		let {name = user.name, description = user.description, nickname = user.nickname} = req.body,
+			avatar = user.avatar;
 
 		if(req.file) {
 			if(req.user?.avatar)
 				await StorageService.remove(req.user.avatar);
 
-			newDoc['avatar'] = await StorageService.upload(req.file);
+			avatar = await StorageService.upload(req.file);
 		}
 
 		//update user and return new
-		await req.user.updateOne(newDoc);
-		const user = await User.findById(req.user._id);
+		await UserRepository.update(user?._id, {name, description, nickname, avatar});
+		const newUser = await UserRepository.getById(req.user._id);
 
-		return res.json({
-			message: 'User was edited',
-			newUser: user
-		});
+		return res.json({message: 'User was edited', newUser});
 	}
 
-	async deleteAvatar(req: IAuthRequest, res: Response){
-		if(!req.user)
+	async deleteAvatar(req: Request, res: Response){
+		const user = req.user;
+
+		if(!user)
 			return res.sendStatus(403);
 
 		//show error if has not avatar
-		if(!req.user.avatar)
+		if(!user.avatar)
 			return res.status(422).json({
 				message: 'This user has not avatar'
 			});
 
 		//delete file
-		await StorageService.remove(req.user.avatar);
+		await StorageService.remove(user.avatar);
 
 		//update user in DB
-		await req.user.updateOne({avatar: null});
-		const user = await User.findById(req.user._id);
+		await UserRepository.update(user._id, {avatar: null});
+		const newUser = await UserRepository.getById(user._id);
 
-		return res.json({
-			message: 'Avatar was deleted',
-			newUser: user
-		});
+		return res.json({message: 'Avatar was deleted', newUser});
 	}
 }
 
