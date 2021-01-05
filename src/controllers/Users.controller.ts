@@ -10,17 +10,11 @@ class UsersController{
 		const nickname = req.params.nickname,
 			user = await UsersRepository.getByNick(nickname);
 
-		if(!user) {
-			return res.status(200).json({
-				message: 'User with this nickname are not exists',
-				user: null
-			});
+		if(!user || user.id == req.user?.id) {
+			return res.json({message: 'User with this nickname are not exists', user: null});
 		}
 		else{
-			return res.status(200).json({
-				message: 'User was found',
-				user
-			});
+			return res.json({message: 'User was found', user});
 		}
 	}
 }

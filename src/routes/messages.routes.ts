@@ -9,5 +9,6 @@ messagesRouter.use(authenticate('bearer', {session: false}));
 
 //add routes
 messagesRouter.get('/text', MessagesController.getMessagesByText);
+messagesRouter.get('/chat/:dialog', MessagesController.getMessageForChat);
 
 export default messagesRouter;

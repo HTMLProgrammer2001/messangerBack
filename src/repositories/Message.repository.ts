@@ -1,4 +1,4 @@
-import {Schema} from 'mongoose';
+import {Schema, Types} from 'mongoose';
 
 import Message, {IMessageData} from '../models/Message.model';
 import DialogRepository from './Dialog.repository';
@@ -50,6 +50,33 @@ class MessageRepository{
 		]);
 
 		const messages = await messagesReq.exec();
+		return messages[0];
+	}
+
+	async paginateForDialog(dialog: string, {page = 1, pageSize = 5}: {page: number, pageSize: number}){
+		const messages = await Message.aggregate([
+			{$limit: 1},
+			{$project: {_id: 1}},
+			{$project: {_id: 0}},
+			{
+				$lookup: {
+					from: 'messages',
+					pipeline: [{$match: {dialog: new Types.ObjectId(dialog)}}],
+					as: 'messages'
+				}
+			},
+			{
+				$replaceRoot: {
+					newRoot: {
+						data: {$slice: ['$messages', pageSize * (page - 1), pageSize]},
+						total: {$size: '$messages'}
+					}
+				}
+			}
+		]);
+
+		console.log(messages);
+
 		return messages[0];
 	}
 
