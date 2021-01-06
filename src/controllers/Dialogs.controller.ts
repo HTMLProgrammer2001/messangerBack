@@ -1,4 +1,5 @@
 import {Request, Response} from 'express';
+import {Types} from 'mongoose';
 
 import {IDialog} from '../models/Dialog.model';
 import DialogRepository from '../repositories/Dialog.repository';
@@ -10,6 +11,7 @@ import DialogsGroupResource from '../resources/DialogsGroupResource';
 import DialogResource from '../resources/DialogResource';
 import {DialogTypes} from '../constants/DialogTypes';
 import {MessageTypes} from '../constants/MessageTypes';
+import MessageResource from '../resources/MessageResource';
 
 
 type IGetDialogsQuery = {page?: number, pageSize?: number};
@@ -17,15 +19,15 @@ type IGetDialogsQuery = {page?: number, pageSize?: number};
 type IGetDialogsByNickRequest = Request<{}, {}, {}, IGetDialogsQuery & {nickname?: string}>
 type IGetDialogsByNameRequest = Request<{name?: string} | IGetDialogsQuery>
 type IGetDialogRequest = Request<{nickname: string}>
-type ICreatePersonal = Request<{}, {}, {nick: string}>
+type ICreatePersonal = Request<{}, {}, {to: any}>
 
 class DialogsController{
 	async createPersonal(req: ICreatePersonal, res: Response){
 		const user = req.user,
-			{nick = ''} = req.body;
+			{to} = req.body;
 
 		//search user with this nick
-		const anotherUser = await UserRepository.getByNick(nick);
+		const anotherUser = await UserRepository.getById(to);
 
 		if(!anotherUser)
 			return res.status(404).json({message: 'No user with this nick'});
@@ -55,6 +57,7 @@ class DialogsController{
 			options: {friendReq: friendReq._id}
 		});
 
+		//return response
 		return res.json({
 			message: 'Friend request was sent'
 		});

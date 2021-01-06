@@ -34,7 +34,7 @@ class MessagesController{
 	}
 
 	async getMessageForChat(req: IGetMessagesForChat, res: Response){
-		let {page = 1, pageSize = 5} = req.query,
+		let {page = 1, pageSize = 25} = req.query,
 			{dialog} = req.params;
 
 		page = +page;

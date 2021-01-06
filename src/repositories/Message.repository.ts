@@ -75,14 +75,12 @@ class MessageRepository{
 			}
 		]);
 
-		console.log(messages);
-
 		return messages[0];
 	}
 
 	async getUnreadMessagesFor(user: Schema.Types.ObjectId, dialog: Schema.Types.ObjectId){
 		const messagesReq = Message.aggregate([
-			{$match: {dialog, readBy: {$nin: [user]}, deletedFor: {$nin: [user]}}},
+			{$match: {dialog, readBy: {$nin: [user]}, deletedFor: {$nin: [user]}, author: {$ne: user}}},
 			{$sort: {time: -1}}
 		]);
 
