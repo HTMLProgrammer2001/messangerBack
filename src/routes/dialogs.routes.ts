@@ -23,8 +23,7 @@ dialogsRouter.get('/nickname/:nickname',
 	DialogController.getDialog
 );
 
-dialogsRouter.post('/personal',
-	DialogController.createPersonal
-);
+dialogsRouter.post('/personal', DialogController.createPersonal);
+dialogsRouter.post('/clear', DialogController.clearDialog);
 
 export default dialogsRouter;

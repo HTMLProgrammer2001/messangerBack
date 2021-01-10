@@ -10,7 +10,7 @@
     "build": "rimraf ./build && tsc",
     "prod": "node ./build/app.js",
     "ci": "cross-env APP_ENV=testing CI=true jest --forceExit --maxWorkers=1",
-	"test": "cross-env APP_ENV=local.testing jest --forceExit --maxWorkers=1 --watch"
+    "test": "cross-env APP_ENV=local.testing jest --forceExit --maxWorkers=1 --watch"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.0",

@@ -19,7 +19,7 @@ class MessagesController{
 			return res.json({message: 'No text to search', page: 1, totalPages: 1, data: [], pageSize: 1});
 
 		//calculate paginate fields
-		const resp = await MessageRepository.paginateMessagesByTextFor(req.user?._id, {text, page, pageSize}),
+		const resp = await MessageRepository.paginateMessagesByTextFor(req.user?.id, {text, page, pageSize}),
 			total = resp ? resp.total : 0,
 			totalPages = Math.ceil(total / pageSize),
 			messages: IMessage[] = resp ? resp.data : [];
@@ -34,13 +34,13 @@ class MessagesController{
 	}
 
 	async getMessageForChat(req: IGetMessagesForChat, res: Response){
-		let {page = 1, pageSize = 25} = req.query,
+		let {page = 1, pageSize = 20} = req.query,
 			{dialog} = req.params;
 
 		page = +page;
 		pageSize = +pageSize;
 
-		const resp = await MessageRepository.paginateForDialog(dialog, {pageSize, page}),
+		const resp = await MessageRepository.paginateDialogFor(req.user?.id, dialog, {pageSize, page}),
 			total = resp ? resp.total : 0,
 			totalPages = Math.ceil(total / pageSize),
 			messages: IMessage[] = resp ? resp.data : [];

@@ -29,7 +29,7 @@ class MessageRepository{
 				$lookup: {
 					from: 'messages',
 					pipeline: [
-						{$match: {message: {$regex: text, $options: 'i'}}},
+						{$match: {message: {$regex: text, $options: 'i'}, deletedFor: {$nin: [user]}}},
 						{$lookup: {localField: 'dialog', from: 'dialogs', foreignField: '_id', as: 'dialogModel'}},
 						{$addFields: {dialogModel: {$arrayElemAt: ['$dialogModel', 0]}}},
 						{$match: {'dialogModel.participants': {$elemMatch: {user}}}},
@@ -53,7 +53,7 @@ class MessageRepository{
 		return messages[0];
 	}
 
-	async paginateForDialog(dialog: string, {page = 1, pageSize = 5}: {page: number, pageSize: number}){
+	async paginateDialogFor(user: string, dialog: string, {page = 1, pageSize = 5}: {page: number, pageSize: number}){
 		const messages = await Message.aggregate([
 			{$limit: 1},
 			{$project: {_id: 1}},
@@ -61,7 +61,10 @@ class MessageRepository{
 			{
 				$lookup: {
 					from: 'messages',
-					pipeline: [{$match: {dialog: new Types.ObjectId(dialog)}}],
+					pipeline: [
+						{$match: {dialog: new Types.ObjectId(dialog), deletedFor: {$nin: [user]}}},
+						{$sort: {time: -1}}
+					],
 					as: 'messages'
 				}
 			},
@@ -78,7 +81,7 @@ class MessageRepository{
 		return messages[0];
 	}
 
-	async getUnreadMessagesFor(user: Schema.Types.ObjectId, dialog: Schema.Types.ObjectId){
+	async getUnreadMessagesFor(user: string, dialog: Schema.Types.ObjectId){
 		const messagesReq = Message.aggregate([
 			{$match: {dialog, readBy: {$nin: [user]}, deletedFor: {$nin: [user]}, author: {$ne: user}}},
 			{$sort: {time: -1}}

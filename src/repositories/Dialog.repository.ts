@@ -1,6 +1,7 @@
-import {Schema} from 'mongoose';
+import {Schema, Types} from 'mongoose';
 
 import Dialog, {IDialog, IDialogData} from '../models/Dialog.model';
+import Message from '../models/Message.model';
 import {DialogTypes} from '../constants/DialogTypes';
 import {IPaginateResponse} from '../interfaces/IPaginateData';
 
@@ -74,7 +75,7 @@ class DialogRepository {
 		return filteredDialogsReq;
 	}
 
-	async paginateByNickFor(id: Schema.Types.ObjectId, {nickname = '', pageSize = 5, page = 1} = {}):
+	async paginateByNickFor(id: string | Schema.Types.ObjectId, {nickname = '', pageSize = 5, page = 1} = {}):
 		Promise<IPaginateFor> {
 		//get paginated dialogs
 		const filteredDialogsReq = this.getDialogsBy('nickname', {val: nickname, page, pageSize, id});
@@ -84,12 +85,27 @@ class DialogRepository {
 		return filteredDialogs[0];
 	}
 
-	async paginateByNameFor(id: Schema.Types.ObjectId, {name = '', pageSize = 5, page = 1} = {}): Promise<IPaginateFor> {
+	async paginateByNameFor(id: string | Schema.Types.ObjectId, {name = '', pageSize = 5, page = 1} = {}): Promise<IPaginateFor> {
 		//get paginated dialogs
 		const filteredDialogsReq = this.getDialogsBy('name', {val: name, page, pageSize, id});
 
 		const filteredDialogs = await filteredDialogsReq.exec();
 		return filteredDialogs[0];
+	}
+
+	async clearFor(userID: Schema.Types.ObjectId, dlgId: Schema.Types.ObjectId){
+		return await Message.updateMany({dialog: dlgId}, {
+			$addToSet: {deletedFor: userID.toString()}
+		});
+	}
+
+	async getDialogWith(user: Types.ObjectId, wit: Types.ObjectId){
+		const dialog = await Dialog.findOne({
+			type: DialogTypes.PERSONAL,
+			"participants.user": {$all: [user, wit]}
+		});
+
+		return dialog;
 	}
 }
 

@@ -17,6 +17,9 @@ class MessageResource extends Resource<IMessage>{
 			author = null,
 			dialog: any = this.data.dialog;
 
+		if(this.data.deletedFor.includes(this.userID.toString()))
+			return null;
+
 		//load author
 		if(authorModel) {
 			author = new UserResource(authorModel, this.userID);
@@ -39,6 +42,7 @@ class MessageResource extends Resource<IMessage>{
 			message: this.data.message,
 			url: this.data.url,
 			time: this.data.time,
+			size: this.data.size,
 			author, dialog
 		};
 	}

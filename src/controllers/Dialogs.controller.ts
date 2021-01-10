@@ -4,14 +4,12 @@ import {Types} from 'mongoose';
 import {IDialog} from '../models/Dialog.model';
 import DialogRepository from '../repositories/Dialog.repository';
 import UserRepository from '../repositories/User.repository';
-import FriendReqRepository from '../repositories/FriendRequest.repository';
 import MessageRepository from '../repositories/Message.repository';
 
 import DialogsGroupResource from '../resources/DialogsGroupResource';
 import DialogResource from '../resources/DialogResource';
 import {DialogTypes} from '../constants/DialogTypes';
 import {MessageTypes} from '../constants/MessageTypes';
-import MessageResource from '../resources/MessageResource';
 
 
 type IGetDialogsQuery = {page?: number, pageSize?: number};
@@ -20,6 +18,7 @@ type IGetDialogsByNickRequest = Request<{}, {}, {}, IGetDialogsQuery & {nickname
 type IGetDialogsByNameRequest = Request<{name?: string} | IGetDialogsQuery>
 type IGetDialogRequest = Request<{nickname: string}>
 type ICreatePersonal = Request<{}, {}, {to: any}>
+type IClearRequest = Request<{}, {}, {user?: any, dialog?: any}>
 
 class DialogsController{
 	async createPersonal(req: ICreatePersonal, res: Response){
@@ -32,16 +31,8 @@ class DialogsController{
 		if(!anotherUser)
 			return res.status(404).json({message: 'No user with this nick'});
 
-		//search user in friends
-		if(user.friends.includes(anotherUser._id))
-			return res.status(422).json({message: 'This user already in your friends'});
-
 		//create dialog and friend request
-		let dialog = await DialogRepository.getDialogByNick(anotherUser.nickname),
-			friendReq = await FriendReqRepository.create({
-				from: user._id,
-				to: anotherUser._id
-			});
+		let dialog = await DialogRepository.getDialogByNick(anotherUser.nickname);
 
 		if(!dialog)
 			dialog = await DialogRepository.create({
@@ -53,13 +44,13 @@ class DialogsController{
 		await MessageRepository.create({
 			author: user._id,
 			dialog: dialog._id,
-			type: MessageTypes.FRIEND,
-			options: {friendReq: friendReq._id}
+			type: MessageTypes.SPECIAL,
+			message: 'Dialog start'
 		});
 
 		//return response
 		return res.json({
-			message: 'Friend request was sent'
+			message: 'Dialog created'
 		});
 	}
 
@@ -122,6 +113,31 @@ class DialogsController{
 			return res.json({message: 'Dialog found', dialog: data});
 
 		return res.status(404).json({message: 'No dialog with this nick'});
+	}
+
+	async clearDialog(req: IClearRequest, res: Response){
+		const {user, dialog} = req.body;
+
+		//check input
+		if((!user && !dialog) || (user && dialog))
+			return res.status(422).json({message: 'Provide or user or dialog'});
+
+		//find dialog
+		const dlg = dialog ?
+			await DialogRepository.getDialogById(dialog) :
+			await DialogRepository.getDialogWith(req.user._id, new Types.ObjectId(user));
+
+		console.log(dlg);
+
+		//show error
+		if(!dlg)
+			return res.status(404).json({message: 'No dialog with this id'});
+
+		//clear and send success response
+		await DialogRepository.clearFor(req.user.id, dlg.id);
+		return res.json({
+			message: 'Dialog was cleared'
+		});
 	}
 }
 

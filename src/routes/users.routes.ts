@@ -8,6 +8,7 @@ const usersRouter = Router({caseSensitive: false});
 usersRouter.use(authenticate('bearer', {session: false}));
 
 //register routes
-usersRouter.get('/:nickname', UsersController.getUser);
+usersRouter.post('/ban', UsersController.banUser);
+usersRouter.get('/nickname/:nickname', UsersController.getUser);
 
 export default usersRouter;

@@ -7,10 +7,10 @@ export interface IMessageData {
 	type: number,
 	message?: string,
 	url?: string,
+	size?: number,
 	time?: Date,
 	readBy?: string[],
-	deletedFor?: string[],
-	options?: Record<string, any>
+	deletedFor?: string[]
 }
 
 export interface IMessage extends Document, IMessageData {}
@@ -31,6 +31,10 @@ const MessageSchema = new Schema<IMessage>({
 	},
 	url: {
 		type: String,
+		required: false
+	},
+	size: {
+		type: Number,
 		required: false
 	},
 	time: {

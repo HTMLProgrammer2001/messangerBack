@@ -4,6 +4,7 @@ import UsersRepository from '../repositories/User.repository';
 
 
 type IGetUserRequest = Request<{nickname: string}>
+type IBanUserRequest = Request<{}, {}, {id: any}>
 
 class UsersController{
 	async getUser(req: IGetUserRequest, res: Response){
@@ -16,6 +17,15 @@ class UsersController{
 		else{
 			return res.json({message: 'User was found', user});
 		}
+	}
+
+	async banUser(req: IBanUserRequest, res: Response){
+		const user = await UsersRepository.getById(req.body.id);
+
+		if(!user)
+			return res.status(404).json({message: 'No user with this id'});
+
+		return res.json({message: 'User banned'})
 	}
 }
 
