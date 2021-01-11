@@ -5,9 +5,9 @@ import {CodeTypes} from '../constants/CodeTypes';
 
 import UserRepository from '../repositories/User.repository';
 import CodeRepository from '../repositories/Code.repository';
+import UserResource from '../resources/UserResource';
 import codeGenerator from '../helpers/codeGenerator';
 import sendCode from '../helpers/sendCode';
-import UserResource from '../resources/UserResource';
 
 
 type ILoginRequest = Request<{}, {}, {phone: string}>
@@ -38,9 +38,7 @@ class UserActionsController{
 			res.json({message: 'Verify code that was sent in your phone'});
 		}
 		catch (e) {
-			res.status(500).json({
-				message: 'Error in send message to your number'
-			});
+			res.status(500).json({message: 'Error in send message to your number'});
 		}
 	}
 
@@ -78,7 +76,10 @@ class UserActionsController{
 			sessionCode: codeGenerator(12)
 		});
 
-		const user = await UserRepository.getById(code.user);
+		const user = await UserRepository.getById(code.user),
+			resource = new UserResource(user, req.user?._id);
+
+		await resource.json();
 
 		//remove code
 		await CodeRepository.removeCode(code._id);
@@ -92,7 +93,7 @@ class UserActionsController{
 		//return response
 		return res.json({
 			message: 'Sign confirmed successfully',
-			token: jwtToken, user
+			token: jwtToken, user: resource
 		});
 	}
 
@@ -106,7 +107,10 @@ class UserActionsController{
 		await UserRepository.update(code.user, {sessionCode: codeGenerator(12)});
 		await CodeRepository.removeCode(code._id);
 
-		const user = await UserRepository.getById(code.user);
+		const user = await UserRepository.getById(code.user),
+			resource = new UserResource(user, req.user?._id);
+
+		await resource.json();
 
 		//generate JWT token
 		const jwtToken = await jwt.sign({
@@ -117,7 +121,7 @@ class UserActionsController{
 		//return token
 		return res.json({
 			message: 'Login successfully',
-			token: jwtToken, user
+			token: jwtToken, user: resource
 		});
 	}
 
@@ -133,9 +137,7 @@ class UserActionsController{
 			await sendCode(req.body.phone, req.body.type, user._id);
 
 			//return successfully message
-			return res.json({
-				message: 'Code was successfully resend'
-			});
+			return res.json({message: 'Code was successfully resend'});
 		}
 		else
 			return res.status(422).json({message: 'Incorrect type'});

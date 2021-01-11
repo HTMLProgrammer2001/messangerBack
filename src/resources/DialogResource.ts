@@ -43,7 +43,7 @@ class DialogResource extends Resource<IDialog>{
 		//get data of another user
 		let userID = this.data.participants[0].user;
 
-		if(userID != this.userID)
+		if(userID.toString() == this.userID.toString())
 			userID = this.data.participants[1].user;
 
 		const userModel = await UserRepository.getById(userID);
@@ -53,6 +53,7 @@ class DialogResource extends Resource<IDialog>{
 			name: userModel?.name,
 			avatar: userModel?.avatar,
 			nick: userModel?.nickname,
+			isActive: !userModel.banned.includes(this.userID.toString()),
 			user: userID
 		};
 	}

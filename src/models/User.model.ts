@@ -65,6 +65,11 @@ const UserSchema = new Schema({
 		type: Date,
 		default: Date.now()
 	},
+	banned: {
+		type: [Schema.Types.ObjectId],
+		default: [],
+		ref: 'User'
+	},
 	options: {
 		type: Object,
 		default: {}

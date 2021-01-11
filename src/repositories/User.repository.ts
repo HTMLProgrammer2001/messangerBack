@@ -1,4 +1,4 @@
-import {Schema} from 'mongoose';
+import {Schema, Types} from 'mongoose';
 
 import User, {IUserData} from '../models/User.model';
 
@@ -10,7 +10,8 @@ class UserRepository{
 	}
 
 	async update(id: Schema.Types.ObjectId, data: Partial<IUserData>){
-		return User.updateOne({_id: id}, data);
+		await User.updateOne({_id: id}, data);
+		return this.getById(id);
 	}
 
 	async getById(id: Schema.Types.ObjectId){
