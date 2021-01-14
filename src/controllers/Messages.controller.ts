@@ -1,12 +1,21 @@
 import {Request, Response} from 'express';
 
-import MessageRepository from '../repositories/Message.repository';
 import {IMessage} from '../models/Message.model';
+import {MessageTypes} from '../constants/MessageTypes';
+
+import MessageRepository from '../repositories/Message.repository';
+import DialogRepository from '../repositories/Dialog.repository';
 import MessagesGroupResource from '../resources/MessagesGroupResource';
+import MessageResource from '../resources/MessageResource';
 
 
 type IGetMessagesByTextReq = Request<{}, {}, {}, {text?: string, page?: number, pageSize?: number}>;
 type IGetMessagesForChat = Request<{dialog: string}, {}, {}, {page?: number, pageSize?: number}>
+type ICreateMessageReq = Request<{}, {}, {
+	dialog: any,
+	message: string,
+	type: MessageTypes
+}>
 
 class MessagesController{
 	async getMessagesByText(req: IGetMessagesByTextReq, res: Response){
@@ -52,6 +61,37 @@ class MessagesController{
 
 		//return response
 		return res.json({message: msg, page, totalPages, pageSize, total, data});
+	}
+
+	async createMessage(req: ICreateMessageReq, res: Response){
+		const {dialog, message, type} = req.body,
+			dlg = await DialogRepository.getDialogById(dialog),
+			userID = req.user?._id;
+
+		//check dialog exists
+		if(!dlg)
+			return res.status(422).json({message: 'No dialog with this id'});
+
+		//check if user is participant
+		if(!dlg.participants.some(part => part.user.toString() == userID.toString()))
+			return res.status(403).json({
+				message: 'You are not active participant of this dialog'
+			});
+
+		//create message and resource
+		const newMessage = await MessageRepository.create({
+				type, dialog, author: req.user?._id,
+				message, time: new Date()
+		}),
+			resource = new MessageResource(newMessage, req.user._id, false);
+
+		await resource.json();
+
+		//return new message
+		return res.json({
+			message: 'Message created',
+			newMessage: resource
+		});
 	}
 }
 
