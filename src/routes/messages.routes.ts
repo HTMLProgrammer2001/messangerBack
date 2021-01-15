@@ -3,6 +3,8 @@ import {authenticate} from 'passport';
 
 import StorageService from '../services/StorageService/';
 import MessagesController from '../controllers/Messages.controller';
+import sendMessageFileMiddleware from '../middlewares/sendMessageFile.middleware';
+import {MessageTypes} from '../constants/MessageTypes';
 
 
 const messagesRouter = Router({caseSensitive: false});
@@ -13,7 +15,13 @@ messagesRouter.get('/text', MessagesController.getMessagesByText);
 messagesRouter.get('/chat/:dialog', MessagesController.getMessageForChat);
 
 messagesRouter.post('/',
-	StorageService.getMiddleware('file', true),
+	(req: any, res: any, next: any) => {
+		if(req.body.type != MessageTypes.MESSAGE)
+			StorageService.getMiddleware('file', true)[0](req, res, next);
+		else
+			next();
+	},
+	sendMessageFileMiddleware,
 	MessagesController.createMessage
 );
 

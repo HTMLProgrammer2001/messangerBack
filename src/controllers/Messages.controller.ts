@@ -7,6 +7,7 @@ import MessageRepository from '../repositories/Message.repository';
 import DialogRepository from '../repositories/Dialog.repository';
 import MessagesGroupResource from '../resources/MessagesGroupResource';
 import MessageResource from '../resources/MessageResource';
+import StorageService from '../services/StorageService/';
 
 
 type IGetMessagesByTextReq = Request<{}, {}, {}, {text?: string, page?: number, pageSize?: number}>;
@@ -64,9 +65,11 @@ class MessagesController{
 	}
 
 	async createMessage(req: ICreateMessageReq, res: Response){
-		const {dialog, message, type} = req.body,
+		let {dialog, message, type} = req.body,
 			dlg = await DialogRepository.getDialogById(dialog),
-			userID = req.user?._id;
+			userID = req.user?._id,
+			size = null,
+			url = null;
 
 		//check dialog exists
 		if(!dlg)
@@ -78,10 +81,17 @@ class MessagesController{
 				message: 'You are not active participant of this dialog'
 			});
 
+		//upload file
+		if(req.file){
+			url = await StorageService.upload(req.file);
+			size = req.file.size;
+			message = req.file.originalname;
+		}
+
 		//create message and resource
 		const newMessage = await MessageRepository.create({
 				type, dialog, author: req.user?._id,
-				message, time: new Date()
+				message, time: new Date(), url, size
 		}),
 			resource = new MessageResource(newMessage, req.user._id, false);
 

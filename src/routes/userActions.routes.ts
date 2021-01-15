@@ -19,7 +19,7 @@ userActionsRouter.get('/me',
 userActionsRouter.post('/me',
 	authenticate('bearer', {session: false}),
 	errorOnInvalid(UserActionsRequest.editMeValidators),
-	StorageService.getMiddleware('avatar'),
+	...StorageService.getMiddleware('avatar', true, '/avatars/'),
 	EditMeController.editMe
 );
 

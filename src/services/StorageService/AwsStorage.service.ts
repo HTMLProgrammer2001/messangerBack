@@ -1,6 +1,7 @@
 import AWS, {S3} from 'aws-sdk';
 import multer from 'multer';
 import {ManagedUpload} from 'aws-sdk/clients/s3';
+import {NextFunction, Request, Response} from 'express';
 
 import {IFile, IStorage} from './IStorage';
 import codeGenerator from '../../helpers/codeGenerator';
@@ -16,11 +17,17 @@ class StorageService implements IStorage {
 		});
 	}
 
-	getMiddleware(field: string, isSingle: boolean = true){
+	getMiddleware(field: string, isSingle: boolean = true, destination: string = ''){
 		const storage = multer.memoryStorage(),
 			uploader = multer({storage});
 
-		return uploader.single(field);
+		return [
+			isSingle ? uploader.single(field) : uploader.array(field),
+			(req: Request, res: Response, next: NextFunction) => {
+				req.file.destination = destination;
+				next();
+			}
+		];
 	}
 
 	async upload(file: IFile): Promise<string> {
