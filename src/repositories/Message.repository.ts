@@ -1,4 +1,4 @@
-import {Schema, Types} from 'mongoose';
+import {ClientSession, Schema, Types} from 'mongoose';
 
 import Message, {IMessageData} from '../models/Message.model';
 import DialogRepository from './Dialog.repository';
@@ -16,8 +16,16 @@ class MessageRepository{
 		return message;
 	}
 
-	getById(id: Schema.Types.ObjectId){
+	getById(id: Schema.Types.ObjectId | string){
 		return Message.findById(id)
+	}
+
+	delete(id: Types.ObjectId | string){
+		return Message.deleteOne({_id: id});
+	}
+
+	async update(id: Types.ObjectId, data: Partial<IMessageData>, session?: ClientSession){
+		return Message.updateOne({_id: id}, data, {session});
 	}
 
 	async paginateMessagesByTextFor(user: any, {text = '', page = 1, pageSize = 5}){

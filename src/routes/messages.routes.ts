@@ -25,4 +25,6 @@ messagesRouter.post('/',
 	MessagesController.createMessage
 );
 
+messagesRouter.delete('/', MessagesController.deleteMessages);
+
 export default messagesRouter;

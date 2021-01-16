@@ -1,4 +1,5 @@
 import {Request, Response} from 'express';
+import {Types} from 'mongoose';
 
 import {IMessage} from '../models/Message.model';
 import {MessageTypes} from '../constants/MessageTypes';
@@ -16,6 +17,11 @@ type ICreateMessageReq = Request<{}, {}, {
 	dialog: any,
 	message: string,
 	type: MessageTypes
+}>
+
+type IDeleteMessagesReq = Request<{}, {}, {}, {
+	messages: string[],
+	forOthers: string
 }>
 
 class MessagesController{
@@ -102,6 +108,36 @@ class MessagesController{
 			message: 'Message created',
 			newMessage: resource
 		});
+	}
+	
+	async deleteMessages(req: IDeleteMessagesReq, res: Response){
+		//get data from query
+		const {messages, forOthers} = req.query,
+			isOther = forOthers == 'true';
+
+		for(let messageID of messages){
+			//find message
+			const msg = await MessageRepository.getById(messageID);
+
+			//check exists
+			if(!msg)
+				return res.status(404).json({message: 'No message with this id'});
+
+			//check error
+			if(isOther && (msg.author.toString() != req.user?.id))
+				return res.status(403).json({message: 'You cannot delete this messages'});
+
+			if(!isOther)
+				//update message deleted for
+				await MessageRepository.update(new Types.ObjectId(messageID), {
+					deletedFor: [...new Set([...msg.deletedFor, req.user?._id])]
+				});
+			else
+				//delete message for all
+				await MessageRepository.delete(new Types.ObjectId(messageID));
+		}
+
+		return res.json({message: 'Messages successfully deleted'});
 	}
 }
 
