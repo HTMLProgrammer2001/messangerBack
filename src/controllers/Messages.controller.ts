@@ -24,6 +24,11 @@ type IDeleteMessagesReq = Request<{}, {}, {}, {
 	forOthers: string
 }>
 
+type IEditMessageReq = Request<{messageID: string}, {}, {
+	message: string,
+	type: MessageTypes
+}>
+
 class MessagesController{
 	async getMessagesByText(req: IGetMessagesByTextReq, res: Response){
 		//parse data from QP
@@ -138,6 +143,48 @@ class MessagesController{
 		}
 
 		return res.json({message: 'Messages successfully deleted'});
+	}
+
+	async editMessage(req: IEditMessageReq, res: Response){
+		let {messageID} = req.params,
+			{message, type} = req.body,
+			userID = req.user?._id,
+			size: number = null,
+			url: string = null;
+
+		//find message
+		const msg = await MessageRepository.getById(messageID);
+
+		//check exists
+		if(!msg)
+			return res.status(404).json({message: 'Message not exists'});
+
+		//check author
+		if(msg.author.toString() != userID.toString())
+			return res.status(403).json({message: 'You are not author of this message'});
+
+		//upload file
+		if(req.file){
+			url = await StorageService.upload(req.file);
+			size = req.file.size;
+			message = req.file.originalname;
+		}
+
+		//update message
+		await MessageRepository.update(new Types.ObjectId(messageID), {
+			type, message, url, size
+		});
+
+		const updatedMessage = await MessageRepository.getById(messageID),
+			resource = new MessageResource(updatedMessage, req.user._id, false);
+
+		await resource.json();
+
+		//return new message
+		return res.json({
+			message: 'Message updated',
+			newMessage: resource
+		});
 	}
 }
 

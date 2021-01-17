@@ -12,9 +12,8 @@ class UsersController{
 		const nickname = req.params.nickname,
 			user = await UsersRepository.getByNick(nickname);
 
-		if(!user || user.id == req.user?.id) {
+		if(!user || user.id == req.user?.id)
 			return res.json({message: 'User with this nickname are not exists', user: null});
-		}
 		else{
 			const resource = new UserResource(user, req.user?._id);
 			await resource.json();

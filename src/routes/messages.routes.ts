@@ -27,4 +27,15 @@ messagesRouter.post('/',
 
 messagesRouter.delete('/', MessagesController.deleteMessages);
 
+messagesRouter.put('/:messageID',
+	(req: any, res: any, next: any) => {
+		if(req.body.type != MessageTypes.MESSAGE)
+			StorageService.getMiddleware('file', true)[0](req, res, next);
+		else
+			next();
+	},
+	sendMessageFileMiddleware,
+	MessagesController.editMessage
+);
+
 export default messagesRouter;

@@ -37,7 +37,8 @@ const DialogSchema = new Schema<IDialog>({
 			},
 			nick: {
 				type: String,
-				required: false
+				required: false,
+				sparse: true
 			}
 		},
 		required: false
