@@ -127,8 +127,6 @@ class DialogsController{
 			await DialogRepository.getDialogById(dialog) :
 			await DialogRepository.getDialogWith(req.user._id, new Types.ObjectId(user));
 
-		console.log(dlg);
-
 		//show error
 		if(!dlg)
 			return res.status(404).json({message: 'No dialog with this id'});

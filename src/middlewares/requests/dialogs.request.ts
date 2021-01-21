@@ -1,8 +1,8 @@
-import {body, param, query} from 'express-validator';
+import {param, query, body} from 'express-validator';
 
 import User from '../../models/User.model';
+import Dialog from '../../models/Dialog.model';
 import existsCustomValidator from '../validators/exists.validator';
-
 
 
 export const getDialogsByNickValidators = [
@@ -18,7 +18,20 @@ export const getDialogsByNameValidators = [
 ];
 
 export const getDialogValidators = [
-	param('nickn' +
-		'ame').isLength({min: 4, max: 32}).withMessage('Nickname must be from 4 to 32 chars').bail()
+	param('nickname').isLength({min: 4, max: 32})
+		.withMessage('Nickname must be from 4 to 32 chars').bail()
 		.custom(existsCustomValidator(User, 'nickname')).withMessage('No dialogs with this nickname')
+];
+
+export const createPersonalValidators = [
+	body('to').isString().withMessage('Not valid id')
+		.custom(existsCustomValidator(User, '_id')).withMessage('No user with this id')
+];
+
+export const clearDialogValidators = [
+	body('user').optional().isString().withMessage('Invalid user id format')
+		.custom(existsCustomValidator(User, '_id')).withMessage('No user with this id'),
+
+	body('dialog').optional().isString().withMessage('Invalid dialog id format')
+		.custom(existsCustomValidator(Dialog, '_id')).withMessage('No dialog with this id'),
 ];

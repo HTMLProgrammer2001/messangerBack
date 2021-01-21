@@ -28,7 +28,7 @@ class MessageRepository{
 		return Message.updateOne({_id: id}, data, {session});
 	}
 
-	async paginateMessagesByTextFor(user: any, {text = '', page = 1, pageSize = 5}){
+	async paginateMessagesByTextFor(user: string, {text = '', page = 1, pageSize = 5}){
 		const messagesReq = Message.aggregate([
 			{$limit: 1},
 			{$project: {_id: 1}},
@@ -40,7 +40,7 @@ class MessageRepository{
 						{$match: {message: {$regex: text, $options: 'i'}, deletedFor: {$nin: [user]}}},
 						{$lookup: {localField: 'dialog', from: 'dialogs', foreignField: '_id', as: 'dialogModel'}},
 						{$addFields: {dialogModel: {$arrayElemAt: ['$dialogModel', 0]}}},
-						{$match: {'dialogModel.participants': {$elemMatch: {user}}}},
+						{$match: {'dialogModel.participants': {$elemMatch: {user: new Types.ObjectId(user)}}}},
 						{$sort: {time: -1}}
 					],
 					as: 'messages'

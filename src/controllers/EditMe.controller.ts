@@ -78,6 +78,7 @@ class EditMeController{
 		let {name = user.name, description = user.description, nickname = user.nickname} = req.body,
 			avatar = user.avatar;
 
+		//upload new avatar
 		if(req.file) {
 			if(req.user?.avatar)
 				await StorageService.remove(req.user.avatar);

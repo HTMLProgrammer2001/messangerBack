@@ -7,8 +7,6 @@ type IReq = Request<{}, {}, {type: MessageTypes}>
 const sendMessageFileMiddleware = (req: IReq, res: Response, next: NextFunction) => {
 	const {type} = req.body;
 
-	console.log(type);
-
 	//add folder to save file
 	switch (type) {
 		case MessageTypes.IMAGE:
