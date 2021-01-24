@@ -46,8 +46,7 @@ describe('Test avatar delete', () => {
 	});
 
 	it('Test deleting for user without avatar', async done => {
-		const user = await UserRepository.create(userData),
-			token = await jwt.sign({
+		const token = await jwt.sign({
 				sessionCode: session,
 				expires: Date.now() + 3000000
 			}, <string>process.env.JWT_SECRET);

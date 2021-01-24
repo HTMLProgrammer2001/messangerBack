@@ -29,7 +29,7 @@ class DialogsController{
 		const anotherUser = await UserRepository.getById(to);
 
 		if(!anotherUser)
-			return res.status(404).json({message: 'No user with this nick'});
+			return res.status(404).json({message: 'No user with this id'});
 
 		//create dialog and friend request
 		let dialog = await DialogRepository.getDialogByNick(anotherUser.nickname);
@@ -39,6 +39,8 @@ class DialogsController{
 				type: DialogTypes.PERSONAL,
 				participants: [{user: user._id}, {user: anotherUser._id}]
 			});
+		else
+			return res.status(422).json({message: 'Dialog with this user already exists'});
 
 		//create message
 		await MessageRepository.create({

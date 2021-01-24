@@ -6,7 +6,7 @@ import {CodeTypes} from '../constants/CodeTypes';
 export interface ICodeData {
 	code: string,
 	to: string,
-	expires: Date,
+	expires?: Date,
 	user: Schema.Types.ObjectId,
 	type: CodeTypes
 }
@@ -18,7 +18,7 @@ const CodeSchema = new Schema<ICode>({
 	to: String,
 	expires: {
 		type: Date,
-		default: Date.now() + 60 * 5 * 1000
+		default: Date.now() + process.env.CODE_TTL
 	},
 	user: {
 		type: Schema.Types.ObjectId,

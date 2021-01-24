@@ -3,9 +3,12 @@ import {Schema, model, Document} from 'mongoose';
 import {Roles} from '../constants/Roles';
 
 
-export interface IUserData {
+interface IUserOptions {
+	currentToken?: string
+}
+
+export interface IUserData extends IUserOptions{
 	nickname: string,
-	sessionCode?: string,
 	name: string,
 	phone: string,
 	avatar?: string,
@@ -26,11 +29,6 @@ const UserSchema = new Schema({
 		unique: false,
 		minlength: 4,
 		maxlength: 32
-	},
-	sessionCode: {
-		type: String,
-		unique: true,
-		sparse: true
 	},
 	nickname: {
 		type: String,

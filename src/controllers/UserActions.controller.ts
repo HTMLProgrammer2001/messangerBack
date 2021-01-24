@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import {CodeTypes} from '../constants/CodeTypes';
 
 import UserRepository from '../repositories/User.repository';
+import TokenRepository from '../repositories/Token.repository';
 import CodeRepository from '../repositories/Code.repository';
 import UserResource from '../resources/UserResource';
 import codeGenerator from '../helpers/codeGenerator';
@@ -71,10 +72,11 @@ class UserActionsController{
 			return res.sendStatus(422);
 
 		//verify him
-		await UserRepository.update(code.user, {
-			verified: true,
-			sessionCode: codeGenerator(12)
-		});
+		await UserRepository.update(code.user, {verified: true});
+
+		//log in user
+		const token = codeGenerator(12);
+		await TokenRepository.createToken({token, user: code.user});
 
 		const user = await UserRepository.getById(code.user),
 			resource = new UserResource(user, req.user?._id);
@@ -85,10 +87,7 @@ class UserActionsController{
 		await CodeRepository.removeCode(code._id);
 
 		//generate JWT token
-		const jwtToken = await jwt.sign({
-			sessionCode: user.sessionCode,
-			expires: Date.now() + parseInt(process.env.TOKEN_TTL || '0')
-		}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token}, <string>process.env.JWT_SECRET);
 
 		//return response
 		return res.json({
@@ -104,7 +103,9 @@ class UserActionsController{
 		if(!code)
 			return res.status(422).json({message: 'This code is invalid'});
 
-		await UserRepository.update(code.user, {sessionCode: codeGenerator(12)});
+		//update db
+		const token = codeGenerator(12);
+		await TokenRepository.createToken({user: code.user, token});
 		await CodeRepository.removeCode(code._id);
 
 		const user = await UserRepository.getById(code.user),
@@ -113,10 +114,7 @@ class UserActionsController{
 		await resource.json();
 
 		//generate JWT token
-		const jwtToken = await jwt.sign({
-			sessionCode: user.sessionCode,
-			expires: Date.now() + parseInt(process.env.TOKEN_TTL || '0')
-		}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token}, <string>process.env.JWT_SECRET);
 
 		//return token
 		return res.json({
@@ -146,7 +144,7 @@ class UserActionsController{
 	async logout(req: ILogoutRequest, res: Response){
 		if(req.user) {
 			//logout user
-			await UserRepository.update(req.user._id, {sessionCode: undefined});
+			await TokenRepository.removeByToken(req.user.currentToken);
 			return res.json({message: 'You were successfully logged out'})
 		}
 
