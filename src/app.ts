@@ -1,14 +1,17 @@
 import express, {NextFunction, Request, Response, Errback, Application} from 'express';
+import {createServer} from 'http';
 import bodyParser from 'body-parser';
 import passport from 'passport';
 import cors from 'cors';
 
 import rootRouter from './routes/';
 import {connect} from './db';
-import './passport';
-import './initEnv';
+import {startWebsocket} from './ws';
 import updateSeenMiddleware from './middlewares/updateSeen.middleware';
 import logInWithoutRedirect from './middlewares/logInWithoutRedirect.middleware';
+
+import './passport';
+import './initEnv';
 
 
 const app: Application = express();
@@ -41,13 +44,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 async function start() {
-	await connect(process.env.MONGO_URL);
+	const http = createServer(app),
+		PORT = process.env.PORT || 5000;
 
-	const PORT = process.env.PORT || 5000;
+	await connect(process.env.MONGO_URL);
+	await startWebsocket(http);
 
 	//start server
 	if(!process.env.APP_ENV || !process.env.APP_ENV.includes('testing')){
-		app.listen(PORT, () => {
+		http.listen(PORT, () => {
 			console.log(`App is running on ${PORT} port`);
 		});
 	}

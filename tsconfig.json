@@ -12,7 +12,8 @@
 		"esModuleInterop": true,
 		"resolveJsonModule": true,
 		"strictNullChecks": false,
-		"downlevelIteration": true
+		"downlevelIteration": true,
+		"experimentalDecorators": true,
 	},
 	"include": ["src/**/*.ts"]
 }

@@ -23,7 +23,10 @@
     "@types/node": "^14.14.12",
     "@types/passport": "^1.0.4",
     "@types/passport-http-bearer": "^1.0.36",
+    "@types/redis": "^2.8.28",
     "@types/supertest": "^2.0.10",
+	  "@types/socket.io": "^2.1.12",
+	  "@types/socket.io-redis": "^1.0.26",
     "cross-env": "^7.0.3",
     "jest": "^26.6.3",
     "nodemon": "^2.0.6",
@@ -45,6 +48,8 @@
     "multer": "^1.4.2",
     "nexmo": "^2.9.1",
     "passport": "^0.4.1",
-    "passport-http-bearer": "^1.0.1"
+    "passport-http-bearer": "^1.0.1",
+    "socket.io": "^3.1.0",
+    "socket.io-redis": "^6.0.1"
   }
 }

@@ -9,10 +9,13 @@ import DialogRepository from '../repositories/Dialog.repository';
 import MessagesGroupResource from '../resources/MessagesGroupResource';
 import MessageResource from '../resources/MessageResource';
 import StorageService from '../services/StorageService/';
+import NewMessageEvent from '../observer/events/NewMessage.event';
+
+import {dispatch} from '../observer';
 
 
-type IGetMessagesByTextReq = Request<{}, {}, {}, {text?: string, page?: number, pageSize?: number}>;
-type IGetMessagesForChat = Request<{dialog: string}, {}, {}, {page?: number, pageSize?: number}>
+type IGetMessagesByTextReq = Request<{}, {}, {}, { text?: string, page?: number, pageSize?: number }>;
+type IGetMessagesForChat = Request<{ dialog: string }, {}, {}, { page?: number, pageSize?: number }>
 type ICreateMessageReq = Request<{}, {}, {
 	dialog: any,
 	message: string,
@@ -24,19 +27,19 @@ type IDeleteMessagesReq = Request<{}, {}, {}, {
 	forOthers: string
 }>
 
-type IEditMessageReq = Request<{messageID: string}, {}, {
+type IEditMessageReq = Request<{ messageID: string }, {}, {
 	message: string,
 	type: MessageTypes
 }>
 
-class MessagesController{
-	async getMessagesByText(req: IGetMessagesByTextReq, res: Response){
+class MessagesController {
+	async getMessagesByText(req: IGetMessagesByTextReq, res: Response) {
 		//parse data from QP
 		let {text, page = 1, pageSize = 5} = req.query;
 		page = +page;
 		pageSize = +pageSize;
 
-		if(!text)
+		if (!text)
 			return res.json({message: 'No text to search', page: 1, totalPages: 1, data: [], pageSize: 1});
 
 		//calculate paginate fields
@@ -54,7 +57,7 @@ class MessagesController{
 		return res.json({message: msg, page, totalPages, pageSize, total, data});
 	}
 
-	async getMessageForChat(req: IGetMessagesForChat, res: Response){
+	async getMessageForChat(req: IGetMessagesForChat, res: Response) {
 		let {page = 1, pageSize = 20} = req.query,
 			{dialog} = req.params;
 
@@ -75,7 +78,7 @@ class MessagesController{
 		return res.json({message: msg, page, totalPages, pageSize, total, data});
 	}
 
-	async createMessage(req: ICreateMessageReq, res: Response){
+	async createMessage(req: ICreateMessageReq, res: Response) {
 		let {dialog, message, type} = req.body,
 			dlg = await DialogRepository.getDialogById(dialog),
 			userID = req.user?._id,
@@ -83,29 +86,32 @@ class MessagesController{
 			url = null;
 
 		//check dialog exists
-		if(!dlg)
+		if (!dlg)
 			return res.status(422).json({message: 'No dialog with this id'});
 
 		//check if user is participant
-		if(!dlg.participants.some(part => part.user.toString() == userID.toString()))
+		if (!dlg.participants.some(part => part.user.toString() == userID.toString()))
 			return res.status(403).json({
 				message: 'You are not active participant of this dialog'
 			});
 
 		//upload file
-		if(req.file){
+		if (req.file) {
 			url = await StorageService.upload(req.file);
 			size = req.file.size;
 			message = req.file.originalname;
 		}
 
-		//create message and resource
+		//create message
 		const newMessage = await MessageRepository.create({
-				type, dialog, author: req.user?._id,
-				message, time: new Date(), url, size
-		}),
-			resource = new MessageResource(newMessage, req.user._id, false);
+			type, dialog, author: req.user?._id,
+			message, time: new Date(), url, size
+		});
 
+		dispatch(new NewMessageEvent(newMessage));
+
+		//make resource
+		const resource = new MessageResource(newMessage, req.user._id, false);
 		await resource.json();
 
 		//return new message
@@ -114,38 +120,38 @@ class MessagesController{
 			newMessage: resource
 		});
 	}
-	
-	async deleteMessages(req: IDeleteMessagesReq, res: Response){
+
+	async deleteMessages(req: IDeleteMessagesReq, res: Response) {
 		//get data from query
 		const {messages, forOthers} = req.query,
 			isOther = forOthers == 'true';
 
-		for(let messageID of messages){
+		for (let messageID of messages) {
 			//find message
 			const msg = await MessageRepository.getById(messageID);
 
 			//check exists
-			if(!msg)
+			if (!msg)
 				return res.status(404).json({message: 'No message with this id'});
 
 			//check error
-			if(isOther && (msg.author.toString() != req.user?.id))
+			if (isOther && (msg.author.toString() != req.user?.id))
 				return res.status(403).json({message: 'You cannot delete this messages'});
 
-			if(!isOther)
-				//update message deleted for
+			if (!isOther)
+			//update message deleted for
 				await MessageRepository.update(new Types.ObjectId(messageID), {
 					deletedFor: [...new Set([...msg.deletedFor, req.user?._id])]
 				});
 			else
-				//delete message for all
+			//delete message for all
 				await MessageRepository.delete(new Types.ObjectId(messageID));
 		}
 
 		return res.json({message: 'Messages successfully deleted'});
 	}
 
-	async editMessage(req: IEditMessageReq, res: Response){
+	async editMessage(req: IEditMessageReq, res: Response) {
 		let {messageID} = req.params,
 			{message, type} = req.body,
 			userID = req.user?._id,
@@ -156,15 +162,15 @@ class MessagesController{
 		const msg = await MessageRepository.getById(messageID);
 
 		//check exists
-		if(!msg)
+		if (!msg)
 			return res.status(404).json({message: 'Message not exists'});
 
 		//check author
-		if(msg.author.toString() != userID.toString())
+		if (msg.author.toString() != userID.toString())
 			return res.status(403).json({message: 'You are not author of this message'});
 
 		//upload file
-		if(req.file){
+		if (req.file) {
 			url = await StorageService.upload(req.file);
 			size = req.file.size;
 			message = req.file.originalname;
