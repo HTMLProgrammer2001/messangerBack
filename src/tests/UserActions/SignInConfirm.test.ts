@@ -94,16 +94,21 @@ describe('Test sign in confirm', () => {
 		});
 
 		//make call
-		st(app)
+		await st(app)
 			.post('/confirm/sign')
 			.send({code: codeData.code})
 			.expect(200)
 			.expect(res => {
 				expect(res.body).toMatchObject({
 					message: 'Sign confirmed successfully',
-					user: {_id: user.id, verified: true}
+					user: {_id: user.id}
 				})
-			})
-			.end(done)
+			});
+
+		//check verification
+		const verifiedUser = await UserRepository.getById(user.id);
+		expect(verifiedUser?.verified).toBeTruthy();
+
+		done();
 	});
 });

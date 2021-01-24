@@ -1,11 +1,12 @@
 import st from 'supertest';
+import jwt from 'jsonwebtoken';
 
 import CodeRepository from '../../repositories/Code.repository';
 import UserRepository from '../../repositories/User.repository';
+import TokenRepository from '../../repositories/Token.repository';
 import app from '../../app';
 import resetDB from '../resetDB';
 import {CodeTypes} from '../../constants/CodeTypes';
-import jwt from 'jsonwebtoken';
 
 
 const code = '12345678';
@@ -96,7 +97,8 @@ describe('Test login confirm', () => {
 
 	it('Test login confirm success', async done => {
 		//create data for tests
-		const user = await UserRepository.create(userData);
+		let user = await UserRepository.create(userData),
+			jwtToken;
 
 		await CodeRepository.createCode({
 			...codeData,
@@ -115,10 +117,15 @@ describe('Test login confirm', () => {
 				});
 
 				expect(res.body.user._id).toBe(user.id);
+
+				//set token
+				jwtToken = res.body.token;
 			});
 
-		const newUser = await UserRepository.getByPhone(userData.phone);
-		expect(newUser?.sessionCode).toBe(code);
+		const {token} = await jwt.verify(jwtToken, process.env.JWT_SECRET) as any,
+			tokenObj = await TokenRepository.findByToken(token);
+
+		expect(tokenObj.token).toBe(code);
 
 		done();
 	});

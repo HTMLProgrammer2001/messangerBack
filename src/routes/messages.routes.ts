@@ -1,24 +1,15 @@
-import {Request, Response, Router} from 'express';
+import {Router} from 'express';
 import {authenticate} from 'passport';
 
 import StorageService from '../services/StorageService/';
 import MessagesController from '../controllers/Messages.controller';
 import * as MessagesRequest from '../middlewares/requests/messages.request';
 import sendMessageFileMiddleware from '../middlewares/sendMessageFile.middleware';
-import {MessageTypes} from '../constants/MessageTypes';
 import errorOnInvalid from '../middlewares/errorOnInvalid.middleware';
 
 
 const messagesRouter = Router({caseSensitive: false});
 messagesRouter.use(authenticate('bearer', {session: false}));
-
-//middleware for optional file upload
-const preMessageValidator = (req: Request, res: Response, next: any) => {
-	if (req.body.type != MessageTypes.MESSAGE)
-		StorageService.getMiddleware('file', true)[0](req, res, next);
-	else
-		next();
-};
 
 //add routes
 messagesRouter.get('/text',
@@ -32,7 +23,7 @@ messagesRouter.get('/chat/:dialog',
 );
 
 messagesRouter.post('/',
-	preMessageValidator,
+	...StorageService.getMiddleware('file', true),
 	sendMessageFileMiddleware,
 	errorOnInvalid(MessagesRequest.createMessageValidators),
 	MessagesController.createMessage
@@ -44,7 +35,7 @@ messagesRouter.delete('/',
 );
 
 messagesRouter.put('/:messageID',
-	preMessageValidator,
+	...StorageService.getMiddleware('file', true),
 	sendMessageFileMiddleware,
 	errorOnInvalid(MessagesRequest.editMessageValidators),
 	MessagesController.editMessage

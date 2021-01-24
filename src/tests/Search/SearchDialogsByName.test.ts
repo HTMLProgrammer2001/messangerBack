@@ -8,24 +8,28 @@ import {DialogTypes} from '../../constants/DialogTypes';
 import {MessageTypes} from '../../constants/MessageTypes';
 
 import UserRepository from '../../repositories/User.repository';
+import TokenRepository from '../../repositories/Token.repository';
 import DialogRepository from '../../repositories/Dialog.repository';
 import MessageRepository from '../../repositories/Message.repository';
 
 
 describe('Test search by name', () => {
 	let userData: IUserData[] = [
-		{nickname: 'test', name: 'Test', phone: '+380666876892', sessionCode: '12345678'},
-		{nickname: 'user', name: 'Yura', phone: '+380506564229', sessionCode: '87654321'},
-		{nickname: 'udemy', name: 'User', phone: '+380980765432', sessionCode: '56754332'}
-	];
+		{nickname: 'test', name: 'Test', phone: '+380666876892'},
+		{nickname: 'user', name: 'Yura', phone: '+380506564229'},
+		{nickname: 'udemy', name: 'User', phone: '+380980765432'}
+	],
+		tokens = ['12345678', '23456789', '34567890'];
 
 	beforeAll(async done => {
 		//reset DB
 		await resetDB();
 
 		//create users
-		const userIDs = await Promise.all(userData.map(async d => {
+		const userIDs = await Promise.all(userData.map(async (d, i) => {
 			const user = await UserRepository.create(d);
+			await TokenRepository.createToken({user: user.id, token: tokens[i]});
+
 			return user._id;
 		}));
 
@@ -60,16 +64,13 @@ describe('Test search by name', () => {
 
 	it('Test success search', async done => {
 		//create token
-		const token = await jwt.sign({
-			sessionCode: userData[0].sessionCode,
-			expires: Date.now() + 3000000
-		}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token: tokens[0]}, <string>process.env.JWT_SECRET);
 
 		//make api call
 		st(app)
 			.get('/dialogs/name')
 			.query({name: 'u'})
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${jwtToken}`)
 			.expect(200)
 			.expect(res => {
 				expect(res.body).toMatchObject({
@@ -102,16 +103,13 @@ describe('Test search by name', () => {
 	});
 
 	it('Test not found', async done => {
-		const token = await jwt.sign({
-			sessionCode: userData[0].sessionCode,
-			expires: Date.now() + 300000
-		}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token: tokens[0]}, <string>process.env.JWT_SECRET);
 
 		//make api call
 		st(app)
 			.get('/dialogs/name')
 			.query({name: 'notFound'})
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${jwtToken}`)
 			.expect(200)
 			.expect(res => {
 				expect(res.body).toMatchObject({

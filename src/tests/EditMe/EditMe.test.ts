@@ -3,25 +3,31 @@ import jwt from 'jsonwebtoken';
 
 import app from '../../app';
 import UserRepository from '../../repositories/User.repository';
+import TokenRepository from '../../repositories/Token.repository';
 import resetDB from '../resetDB';
 
 
 describe('Test edit me', () => {
+	const token = '12345678';
+
 	const userData = {
 			nickname: 'Test',
 			name: 'Name',
-			phone: '+380997645334',
-			sessionCode: '123456'
+			phone: '+380997645334'
 		},
 		newUserData = {
 			nickname: 'newNick',
 			name: 'newName'
 		};
 
+	let user: any;
+
 	beforeEach(async done => {
 		await resetDB();
-		jest.clearAllMocks();
+		user = await UserRepository.create(userData);
+		await TokenRepository.createToken({token, user: user.id});
 
+		jest.clearAllMocks();
 		done();
 	});
 
@@ -36,17 +42,13 @@ describe('Test edit me', () => {
 
 	it('Test success edit', async done => {
 		//create data
-		const user = await UserRepository.create(userData),
-			token = await jwt.sign({
-				sessionCode: userData.sessionCode,
-				expires: Date.now() + 3000000
-			}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token}, <string>process.env.JWT_SECRET);
 
 		//make api call
 		st(app)
 			.post('/me')
 			.send(newUserData)
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${jwtToken}`)
 			.expect(200)
 			.expect(res => {
 				expect(res.body).toMatchObject({

@@ -4,6 +4,7 @@ import Mocked = jest.Mocked;
 
 import StorageService from '../../services/StorageService/';
 import UserRepository from '../../repositories/User.repository';
+import TokenRepository from '../../repositories/Token.repository';
 import app from '../../app';
 import resetDB from '../resetDB';
 
@@ -20,20 +21,24 @@ jest.mock('../../services/StorageService/', () => ({
 const mockedStorage = StorageService as Mocked<typeof StorageService>;
 
 describe('Test avatar delete', () => {
-	const session = '123456',
+	const token = '123456',
 		avatarPath = '/avatars/test.jpg',
 		avatarPathURL =  process.env.APP_URL + avatarPath,
 		userData = {
 			nickname: 'Test',
 			name: 'Name',
-			phone: '+380997645334',
-			sessionCode: session
+			phone: '+380997645334'
 		};
 
-	beforeEach(async done => {
-		await resetDB();
-		jest.clearAllMocks();
+	let user: any;
 
+	beforeEach(async done => {
+		//change db
+		await resetDB();
+		user = await UserRepository.create({...userData, avatar: avatarPathURL});
+		await TokenRepository.createToken({user: user.id, token});
+
+		jest.clearAllMocks();
 		done();
 	});
 
@@ -46,34 +51,24 @@ describe('Test avatar delete', () => {
 	});
 
 	it('Test deleting for user without avatar', async done => {
-		const token = await jwt.sign({
-				sessionCode: session,
-				expires: Date.now() + 3000000
-			}, <string>process.env.JWT_SECRET);
+		await UserRepository.update(user.id, {avatar: null});
+		const jwtToken = await jwt.sign({token}, <string>process.env.JWT_SECRET);
 
 		st(app)
 			.delete('/avatar')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${jwtToken}`)
 			.expect(422)
 			.expect({message: 'This user has not avatar'})
 			.end(done);
 	});
 
 	it('Test success avatar deleting', async done => {
-		const user = await UserRepository.create({
-			...userData,
-			avatar: avatarPathURL
-		});
-
-		const token = await jwt.sign({
-			sessionCode: session,
-			expires: Date.now() + 3000000
-		}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token}, <string>process.env.JWT_SECRET);
 
 		//make api call
 		await st(app)
 			.delete('/avatar')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${jwtToken}`)
 			.expect(200)
 			.expect(res => {
 				expect(res.body).toMatchObject({

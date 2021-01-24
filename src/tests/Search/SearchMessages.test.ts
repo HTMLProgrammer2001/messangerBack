@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import app from '../../app';
 import resetDB from '../resetDB';
 import UserRepository from '../../repositories/User.repository';
+import TokenRepository from '../../repositories/Token.repository';
 import DialogRepository from '../../repositories/Dialog.repository';
 import MessageRepository from '../../repositories/Message.repository';
 
@@ -15,21 +16,24 @@ import {MessageTypes} from '../../constants/MessageTypes';
 
 
 describe('Test search messages', () => {
-	let userData: IUserData[] = [
-		{nickname: 'test', name: 'Test', phone: '+380666876892', sessionCode: '12345678'},
-		{nickname: 'user', name: 'Test2', phone: '+380506564229', sessionCode: '87654321'},
-		{nickname: 'userTest', name: 'Yura', phone: '+3806789664', sessionCode: '10234521'}
-	],
-	dialogData: IDialogData = {type: DialogTypes.PERSONAL, participants: []},
-	messagesData: IMessageData[] = [];
+	let tokens = ['12345678', '23456789', '34567890'],
+		userData: IUserData[] = [
+			{nickname: 'test', name: 'Test', phone: '+380666876892'},
+			{nickname: 'user', name: 'Test2', phone: '+380506564229'},
+			{nickname: 'userTest', name: 'Yura', phone: '+3806789664'}
+		],
+		dialogData: IDialogData = {type: DialogTypes.PERSONAL, participants: []},
+		messagesData: IMessageData[] = [];
 
 	beforeAll(async done => {
 		//reset db
 		await resetDB();
 
 		//create data
-		const userIDs = await Promise.all(userData.map(async d => {
+		const userIDs = await Promise.all(userData.map(async (d, i) => {
 			const user = await UserRepository.create(d);
+			await TokenRepository.createToken({user: user.id, token: tokens[i]});
+
 			return user._id;
 		}));
 
@@ -63,10 +67,7 @@ describe('Test search messages', () => {
 	jest.setTimeout(30000);
 
 	it('Test message success search', async done => {
-		const token = await jwt.sign({
-			sessionCode: userData[0].sessionCode,
-			expires: Date.now() + 3000000
-		}, <string>process.env.JWT_SECRET);
+		const token = await jwt.sign({token: tokens[0]}, <string>process.env.JWT_SECRET);
 
 		st(app)
 			.get('/messages/text')
@@ -107,10 +108,7 @@ describe('Test search messages', () => {
 	});
 
 	it('Test get messages without query', async done => {
-		const token = await jwt.sign({
-			sessionCode: userData[0].sessionCode,
-			expires: Date.now() + 3000000
-		}, <string>process.env.JWT_SECRET);
+		const token = await jwt.sign({token: tokens[0]}, <string>process.env.JWT_SECRET);
 
 		st(app)
 			.get('/messages/text')
@@ -129,10 +127,7 @@ describe('Test search messages', () => {
 	});
 
 	it('Test get messages that not found', async done => {
-		const token = await jwt.sign({
-			sessionCode: userData[0].sessionCode,
-			expires: Date.now() + 3000000
-		}, <string>process.env.JWT_SECRET);
+		const token = await jwt.sign({token: tokens[0]}, <string>process.env.JWT_SECRET);
 
 		st(app)
 			.get('/messages/text')
@@ -146,10 +141,7 @@ describe('Test search messages', () => {
 	});
 
 	it('Test get messages sorted by time', async done => {
-		const token = await jwt.sign({
-			sessionCode: userData[1].sessionCode,
-			expires: Date.now() + 3000000
-		}, <string>process.env.JWT_SECRET);
+		const token = await jwt.sign({token: tokens[1]}, <string>process.env.JWT_SECRET);
 
 		st(app)
 			.get('/messages/text')

@@ -15,7 +15,9 @@ class FileSystemStorageService implements IStorage {
 		return [
 			isSingle ? uploader.single(field) : uploader.array(field),
 			(req: Request, res: Response, next: NextFunction) => {
-				req.file.destination = destination;
+				if(req.file)
+					req.file.destination = destination;
+
 				next();
 			}
 		];

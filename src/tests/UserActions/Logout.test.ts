@@ -4,34 +4,35 @@ import jwt from 'jsonwebtoken';
 import app from '../../app';
 import resetDB from '../resetDB';
 import UserRepository from '../../repositories/User.repository';
+import TokenRepository from '../../repositories/Token.repository';
 
 
 describe('Test logout', () => {
-	const code = '12345678',
+	const token = '12345678',
 		userData = {
 			name: 'Test',
 			nickname: 'Nick',
-			phone: '+380666876892',
-			sessionCode: code
+			phone: '+380666876892'
 		};
 
 	beforeEach(async (done) => {
+		//change db
 		await resetDB();
-		await UserRepository.create(userData);
+
+		const user = await UserRepository.create(userData);
+		await TokenRepository.createToken({token, user: user.id});
+
 		done();
 	});
 
 	jest.setTimeout(30000);
 
 	it('Test successfully logout', async done => {
-		const token = await jwt.sign({
-			sessionCode: code,
-			expires: Date.now() + 30000000
-		}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token}, <string>process.env.JWT_SECRET);
 
 		st(app)
 			.post('/logout')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${jwtToken}`)
 			.expect(200)
 			.expect({message: 'You were successfully logged out'})
 			.end(done);
@@ -54,16 +55,16 @@ describe('Test logout', () => {
 	});
 
 	it('Test logout with expires token', async done => {
-		const token = await jwt.sign({
-			sessionCode: code,
-			expires: Date.now() - 1000
-		}, <string>process.env.JWT_SECRET);
+		//change token expires
+		const tokenObj = await TokenRepository.findByToken(token);
+		await TokenRepository.update(tokenObj._id, {expires: new Date(Date.now() - 100)});
+
+		const jwtToken = await jwt.sign({token}, <string>process.env.JWT_SECRET);
 
 		st(app)
 			.post('/logout')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${jwtToken}`)
 			.expect(500)
-			// .expect({error: 'Token expires'})
 			.end(done)
 	});
 });

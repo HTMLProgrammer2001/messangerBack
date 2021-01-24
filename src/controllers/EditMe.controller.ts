@@ -80,15 +80,15 @@ class EditMeController{
 
 		//upload new avatar
 		if(req.file) {
-			if(req.user?.avatar)
-				await StorageService.remove(req.user.avatar);
+			if(user.avatar)
+				await StorageService.remove(user.avatar);
 
 			avatar = await StorageService.upload(req.file);
 		}
 
 		//update user and return new
-		await UserRepository.update(user?._id, {name, description, nickname, avatar});
-		const newUser = await UserRepository.getById(req.user._id);
+		await UserRepository.update(user.id, {name, description, nickname, avatar});
+		const newUser = await UserRepository.getById(user._id);
 
 		return res.json({message: 'User was edited', newUser});
 	}

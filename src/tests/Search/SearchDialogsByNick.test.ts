@@ -8,39 +8,49 @@ import {DialogTypes} from '../../constants/DialogTypes';
 import {MessageTypes} from '../../constants/MessageTypes';
 
 import UserRepository from '../../repositories/User.repository';
+import TokenRepository from '../../repositories/Token.repository';
 import DialogRepository from '../../repositories/Dialog.repository';
 import MessageRepository from '../../repositories/Message.repository';
 
 
 describe('Test search by nick', () => {
-	let userData: IUserData[] = [
-		{nickname: 'test', name: 'Test', phone: '+380666876892', sessionCode: '12345678'},
-		{nickname: 'user', name: 'Yura', phone: '+380506564229', sessionCode: '87654321'},
-		{nickname: 'udemy', name: 'User', phone: '+380980765432', sessionCode: '56754332'}
-	];
+	let tokens = ['12345678', '23456789', '34567890'],
+		userData: IUserData[] = [
+			{nickname: 'test', name: 'Test', phone: '+380666876892'},
+			{nickname: 'user', name: 'Yura', phone: '+380506564229'},
+			{nickname: 'udemy', name: 'User', phone: '+380980765432'}
+		];
 
 	beforeAll(async done => {
 		//reset DB
 		await resetDB();
 
 		//create users
-		const userIDs = await Promise.all(userData.map(async d => {
+		const userIDs = await Promise.all(userData.map(async (d, i) => {
 			const user = await UserRepository.create(d);
+			await TokenRepository.createToken({user: user.id, token: tokens[i]});
+
 			return user._id;
 		}));
 
 		//create dialogs
-		await DialogRepository.create({type: DialogTypes.PERSONAL, participants: [
-			{user: userIDs[0]}, {user: userIDs[1]}
-		]});
+		await DialogRepository.create({
+			type: DialogTypes.PERSONAL, participants: [
+				{user: userIDs[0]}, {user: userIDs[1]}
+			]
+		});
 
-		await DialogRepository.create({type: DialogTypes.PERSONAL, participants: [
-			{user: userIDs[1]}, {user: userIDs[2]}
-		]});
+		await DialogRepository.create({
+			type: DialogTypes.PERSONAL, participants: [
+				{user: userIDs[1]}, {user: userIDs[2]}
+			]
+		});
 
-		const dialog = await DialogRepository.create({type: DialogTypes.PERSONAL, participants: [
-			{user: userIDs[0]}, {user: userIDs[2]}
-		]});
+		const dialog = await DialogRepository.create({
+			type: DialogTypes.PERSONAL, participants: [
+				{user: userIDs[0]}, {user: userIDs[2]}
+			]
+		});
 
 		//create message
 		const message = await MessageRepository.create({
@@ -60,16 +70,13 @@ describe('Test search by nick', () => {
 
 	it('Test success search', async done => {
 		//create token
-		const token = await jwt.sign({
-			sessionCode: userData[0].sessionCode,
-			expires: Date.now() + 3000000
-		}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token: tokens[0]}, <string>process.env.JWT_SECRET);
 
 		//make api call
 		st(app)
 			.get('/dialogs/nickname')
 			.query({nickname: 'u'})
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${jwtToken}`)
 			.expect(200)
 			.expect(res => {
 				expect(res.body).toMatchObject({
@@ -102,16 +109,13 @@ describe('Test search by nick', () => {
 	});
 
 	it('Test not found', async done => {
-		const token = await jwt.sign({
-			sessionCode: userData[0].sessionCode,
-			expires: Date.now() + 300000
-		}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token: tokens[0]}, <string>process.env.JWT_SECRET);
 
 		//make api call
 		st(app)
 			.get('/dialogs/nickname')
 			.query({nickname: 'notFound'})
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${jwtToken}`)
 			.expect(200)
 			.expect(res => {
 				expect(res.body).toMatchObject({

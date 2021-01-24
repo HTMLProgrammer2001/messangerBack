@@ -3,23 +3,25 @@ import jwt from 'jsonwebtoken';
 
 import app from '../../app';
 import resetDB from '../resetDB';
-import User from '../../models/User.model';
+import UserRepository from '../../repositories/User.repository';
+import TokenRepository from '../../repositories/Token.repository';
 
 
 describe('Test get me info', () => {
-	const sessionCode = '132239045347',
+	const token = '132239045347',
 		userData = {
 			nickname: 'Test',
 			name: 'Name',
-			phone: '+380997645334',
-			sessionCode
+			phone: '+380997645334'
 		};
 
 	let user: any = null;
 
 	beforeAll(async (done) => {
+		//update db
 		await resetDB();
-		user = await User.create(userData);
+		user = await UserRepository.create(userData);
+		await TokenRepository.createToken({user: user.id, token});
 
 		done();
 	});
@@ -42,28 +44,29 @@ describe('Test get me info', () => {
 
 	it('Test get success info', async () => {
 		//generate token
-		const token = await jwt.sign({
-			sessionCode: user.sessionCode,
-			expires: Date.now() + parseInt(process.env.TOKEN_TTL || '0')
-		}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token}, <string>process.env.JWT_SECRET);
 
 		//test
 		return st(app)
 			.get('/me')
-			.set('Authorization', `Bearer ${token}`)
-			.expect(200);
+			.set('Authorization', `Bearer ${jwtToken}`)
+			.expect(200)
+			.expect(res => {
+				expect(res.body._id).toBe(user.id);
+			});
 	});
 
 	it('Test get info with expires token', async () => {
+		//change token expires
+		const tokenObj = await TokenRepository.findByToken(token);
+		await TokenRepository.update(tokenObj._id, {expires: new Date(Date.now() - 100)});
+
 		//generate token
-		const token = await jwt.sign({
-			sessionCode: user.sessionCode,
-			expires: Date.now() - 1000
-		}, <string>process.env.JWT_SECRET);
+		const jwtToken = await jwt.sign({token}, <string>process.env.JWT_SECRET);
 
 		return st(app)
 			.get('/me')
-			.set('Authorization', `Bearer ${token}`)
+			.set('Authorization', `Bearer ${jwtToken}`)
 			.expect(500);
 	});
 });
