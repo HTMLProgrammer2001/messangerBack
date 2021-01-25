@@ -6,7 +6,7 @@ import UserRepository from './repositories/User.repository';
 import TokenRepository from './repositories/Token.repository';
 
 
-passport.use(new BearerStrategy(async (jwtToken, done) => {
+export const auth = async (jwtToken: string, done: Function) => {
 	try {
 		type IJWTData = {token: string};
 		const {token} = jwt.verify(jwtToken, <string>process.env.JWT_SECRET) as IJWTData,
@@ -35,4 +35,6 @@ passport.use(new BearerStrategy(async (jwtToken, done) => {
 		//error
 		done(e);
 	}
-}));
+};
+
+passport.use(new BearerStrategy(auth));

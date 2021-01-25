@@ -3,14 +3,8 @@ import disconnectListener from './Disconnect.listener';
 
 
 const connectListener = (socket: Socket) => {
-	console.log(`Connected ${socket.id}`);
-	let count = 0;
-
+	console.log(`Connected ${socket.user.id}`);
 	socket.on('disconnected', disconnectListener);
-
-	setInterval(() =>{
-		socket.emit('message', ++count);
-	}, 1000);
 };
 
 export default connectListener;

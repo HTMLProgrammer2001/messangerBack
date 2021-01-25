@@ -35,6 +35,7 @@ class DialogRepository {
 				{$match: {type: DialogTypes.PERSONAL}},
 				{$lookup: {from: 'users', localField: 'participants.user', foreignField: '_id', as: 'users'}},
 				{$match: {users: {$elemMatch: {nickname, _id: {$ne: id}}}}},
+				{$match: {users: {$elemMatch: {_id: id}}}},
 				{$project: {users: 0}}
 			]);
 
