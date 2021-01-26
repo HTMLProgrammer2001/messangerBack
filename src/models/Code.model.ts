@@ -16,15 +16,19 @@ export interface ICode extends Document, ICodeData{}
 const CodeSchema = new Schema<ICode>({
 	code: String,
 	to: String,
-	expires: {
-		type: Date,
-		default: Date.now() + process.env.CODE_TTL
-	},
+	expires: Date,
 	user: {
 		type: Schema.Types.ObjectId,
 		ref: 'User'
 	},
 	type: Number
+});
+
+CodeSchema.pre('save', function(next){
+	if(!this.get('expires'))
+		this.set('expires', Date.now() + (+process.env.CODE_TTL || 300000));
+
+	next();
 });
 
 export default model<ICode>('Code', CodeSchema);

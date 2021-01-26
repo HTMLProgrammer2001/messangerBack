@@ -10,10 +10,7 @@ export interface ITokenData {
 export interface IToken extends Document, ITokenData{}
 
 const TokenSchema = new Schema<IToken>({
-	expires: {
-		type: Date,
-		default: Date.now() + (+process.env.TOKEN_TTL || 3600000)
-	},
+	expires: Date,
 	user: {
 		type: Schema.Types.ObjectId,
 		ref: 'User'
@@ -23,6 +20,13 @@ const TokenSchema = new Schema<IToken>({
 		unique: true,
 		required: true
 	}
+});
+
+TokenSchema.pre('save', function(next){
+	if(!this.get('expires'))
+		this.set('expires', Date.now() + (+process.env.TOKEN_TTL || 3600000));
+
+	next();
 });
 
 export default model<IToken>('Token', TokenSchema);
