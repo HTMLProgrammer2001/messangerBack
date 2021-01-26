@@ -10,6 +10,10 @@ import DialogsGroupResource from '../resources/DialogsGroupResource';
 import DialogResource from '../resources/DialogResource';
 import {DialogTypes} from '../constants/DialogTypes';
 import {MessageTypes} from '../constants/MessageTypes';
+import NewDialogEvent from '../observer/events/NewDialog.event';
+import NewMessageEvent from '../observer/events/NewMessage.event';
+
+import {dispatch} from '../observer';
 
 
 type IGetDialogsQuery = {page?: number, pageSize?: number};
@@ -43,12 +47,17 @@ class DialogsController{
 			return res.status(422).json({message: 'Dialog with this user already exists'});
 
 		//create message
-		await MessageRepository.create({
+		const msg = await MessageRepository.create({
 			author: user._id,
 			dialog: dialog._id,
 			type: MessageTypes.SPECIAL,
 			message: 'Dialog start'
 		});
+
+		dialog = await DialogRepository.update(dialog._id, {lastMessage: msg._id});
+
+		//send events
+		dispatch(new NewDialogEvent(dialog, req.user._id));
 
 		//return response
 		return res.json({

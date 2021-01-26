@@ -108,7 +108,7 @@ class MessagesController {
 			message, time: new Date(), url, size
 		});
 
-		dispatch(new NewMessageEvent(newMessage));
+		dispatch(new NewMessageEvent(newMessage, req.user._id));
 
 		//make resource
 		const resource = new MessageResource(newMessage, req.user._id, false);
