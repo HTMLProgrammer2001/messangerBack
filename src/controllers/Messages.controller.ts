@@ -12,6 +12,8 @@ import StorageService from '../services/StorageService/';
 import NewMessageEvent from '../observer/events/NewMessage.event';
 
 import {dispatch} from '../observer';
+import UpdateMessageEvent from '../observer/events/UpdateMessage.event';
+import DeleteMessageEvent from '../observer/events/DeleteMessage.event';
 
 
 type IGetMessagesByTextReq = Request<{}, {}, {}, { text?: string, page?: number, pageSize?: number }>;
@@ -143,9 +145,12 @@ class MessagesController {
 				await MessageRepository.update(new Types.ObjectId(messageID), {
 					deletedFor: [...new Set([...msg.deletedFor, req.user?._id])]
 				});
-			else
-			//delete message for all
-				await MessageRepository.delete(new Types.ObjectId(messageID));
+			else {
+				//delete message for all
+				const msg = await MessageRepository.getById(messageID);
+				dispatch(new DeleteMessageEvent(msg));
+				await MessageRepository.delete(msg._id);
+			}
 		}
 
 		return res.json({message: 'Messages successfully deleted'});
@@ -185,6 +190,9 @@ class MessagesController {
 			resource = new MessageResource(updatedMessage, req.user._id, false);
 
 		await resource.json();
+
+		//send event
+		dispatch(new UpdateMessageEvent(updatedMessage));
 
 		//return new message
 		return res.json({
