@@ -2,6 +2,7 @@ import {Socket} from 'socket.io';
 
 import UserRepository from '../../repositories/User.repository';
 import disconnectListener from './Disconnect.listener';
+import setStatusListener from './SetStatus.listener';
 
 
 const connectListener = async (socket: Socket) => {
@@ -15,6 +16,7 @@ const connectListener = async (socket: Socket) => {
 
 	//handlers
 	socket.on('disconnecting', disconnectListener.bind(null, socket));
+	socket.on('changeDialogStatus', setStatusListener.bind(null, socket));
 };
 
 export default connectListener;

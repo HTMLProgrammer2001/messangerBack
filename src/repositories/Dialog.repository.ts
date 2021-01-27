@@ -19,7 +19,7 @@ class DialogRepository {
 		return this.getDialogById(id);
 	}
 
-	getDialogById(id: Schema.Types.ObjectId){
+	getDialogById(id: Schema.Types.ObjectId | string){
 		return Dialog.findById(id);
 	}
 
