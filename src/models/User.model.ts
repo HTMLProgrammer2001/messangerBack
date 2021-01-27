@@ -16,6 +16,7 @@ export interface IUserData extends IUserOptions{
 	role?: Roles,
 	verified?: boolean,
 	lastSeen?: Date,
+	isOnline?: boolean,
 	banned?: string[]
 	options?: Object
 }
@@ -62,6 +63,10 @@ const UserSchema = new Schema({
 	lastSeen: {
 		type: Date,
 		default: Date.now()
+	},
+	isOnline: {
+		type: Boolean,
+		default: false
 	},
 	banned: {
 		type: [Schema.Types.ObjectId],

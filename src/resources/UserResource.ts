@@ -14,7 +14,9 @@ class UserResource extends Resource<IUser>{
 			nickname: this.data.nickname,
 			phone: this.data.phone,
 			description: this.data.description,
-			isBanned: curUser?.banned.includes(this.data._id)
+			isBanned: curUser?.banned.includes(this.data._id),
+			isOnline: this.data.isOnline,
+			lastSeen: this.data.lastSeen
 		};
 	}
 }
