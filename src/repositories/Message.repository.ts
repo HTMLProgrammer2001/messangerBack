@@ -99,6 +99,7 @@ class MessageRepository{
 			{$match: {
 				dialog,
 				readBy: {$ne: user.toString()},
+				deletedFor: {$ne: user.toString()},
 				author: {$ne: user}
 			}},
 			{$sort: {time: -1}}
