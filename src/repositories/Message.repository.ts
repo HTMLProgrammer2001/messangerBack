@@ -28,6 +28,11 @@ class MessageRepository{
 		return Message.updateOne({_id: id}, data, {session});
 	}
 
+	async readFor(id: Types.ObjectId | string, user: string){
+		await Message.updateOne({_id: id}, {$addToSet: {readBy: user}});
+		return Message.findById(id);
+	}
+
 	async paginateMessagesByTextFor(user: string, {text = '', page = 1, pageSize = 5}){
 		const messagesReq = Message.aggregate([
 			{$limit: 1},
@@ -91,7 +96,11 @@ class MessageRepository{
 
 	async getUnreadMessagesFor(user: string, dialog: Schema.Types.ObjectId){
 		const messagesReq = Message.aggregate([
-			{$match: {dialog, readBy: {$nin: [user]}, deletedFor: {$nin: [user]}, author: {$ne: user}}},
+			{$match: {
+				dialog,
+				readBy: {$ne: user.toString()},
+				author: {$ne: user}
+			}},
 			{$sort: {time: -1}}
 		]);
 

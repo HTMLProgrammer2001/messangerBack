@@ -43,6 +43,8 @@ class MessageResource extends Resource<IMessage>{
 			url: this.data.url,
 			time: this.data.time,
 			size: this.data.size,
+			readed: this.data.readBy.includes(this.userID.toString()) ||
+				(this.data.author.toString() == this.userID.toString() && this.data.readBy.length),
 			author, dialog
 		};
 	}
