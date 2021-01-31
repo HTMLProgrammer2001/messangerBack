@@ -23,7 +23,7 @@ jobs:
                   MONGO_URL: ${{secrets.MONGO_URL}}
               run: |
                   npm install
-                  npm run ci
+#                  npm run ci
 
             - name: Build
               run: |
