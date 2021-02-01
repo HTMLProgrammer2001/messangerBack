@@ -3,6 +3,7 @@ import {Request, Response} from 'express';
 import {Document} from 'mongoose';
 
 import {IAuthRequest} from '../../interfaces/IAuthRequest';
+import {CodeTypes} from '../../constants/CodeTypes';
 import User, {IUser} from '../../models/User.model';
 import Code from '../../models/Code.model';
 import uniqueCustomValidator from '../validators/unique.validator';
@@ -28,9 +29,8 @@ export const confirmValidators = [
 ];
 
 export const resendValidators = [
-	body('phone').isMobilePhone('any').withMessage('Phone must be valid phone number')
-		.custom(existsCustomValidator(User, 'phone')).withMessage('User with this phone not exists'),
-	body('type').isNumeric().withMessage('Type must be numeric')
+	body('phone').isMobilePhone('any').withMessage('Phone must be valid phone number'),
+	body('type').isIn(Object.values(CodeTypes)).withMessage('Invalid type')
 ];
 
 const ignoreUserWithPhone = (req: Request<{}, {}, {phone: string}>, res: Response, doc: Document) => {

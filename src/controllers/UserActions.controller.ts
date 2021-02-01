@@ -127,12 +127,22 @@ class UserActionsController{
 		//validate code type
 		if(req.body.type in CodeTypes){
 			//validate user exists
-			const user = await UserRepository.getByPhone(req.body.phone);
+			let user = await UserRepository.getByPhone(req.body.phone),
+				userID = user?._id;
 
-			if(!user)
+			//for change phone search user in code
+			if(!userID && req.body.type == CodeTypes.CHANGE_PHONE) {
+				const code = await CodeRepository.findByPhoneAndType(req.body.phone, CodeTypes.CHANGE_PHONE);
+
+				if(code[0])
+					userID = code[0].user;
+			}
+
+			//show error
+			if(!userID)
 				return res.status(422).json({message: 'No user with this phone'});
 
-			await sendCode(req.body.phone, req.body.type, user._id);
+			await sendCode(req.body.phone, req.body.type, userID);
 
 			//return successfully message
 			return res.json({message: 'Code was successfully resend'});
@@ -165,3 +175,4 @@ class UserActionsController{
 }
 
 export default new UserActionsController();
+
