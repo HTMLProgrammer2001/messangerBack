@@ -1,3 +1,4 @@
+name: Deploy messanger server
 on:
     push:
         branches:
@@ -25,13 +26,14 @@ jobs:
                   npm install
 #                  npm run ci
 
-            - name: Build
-              run: |
-                  npm run build
+            - name: Build image
+              run: docker build -t messanger/server .
 
-            - name: Deploy to Heroku
-              uses: akhileshns/heroku-deploy@v3.6.8
+            - name: Deploy image 🚀
+              uses: jwalton/gh-ecr-push@v1
               with:
-                  heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-                  heroku_app_name: messangerkx
-                  heroku_email: cssuperpy@gmail.com
+                  access-key-id: ${{ secrets.AWS_ACCESS }}
+                  secret-access-key: ${{ secrets.AWS_SECRET }}
+                  region: eu-central-1
+                  local-image: messanger/server
+                  image: messanger/server:${{github.sha}}

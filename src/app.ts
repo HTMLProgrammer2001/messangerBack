@@ -4,14 +4,14 @@ import bodyParser from 'body-parser';
 import passport from 'passport';
 import cors from 'cors';
 
+import './passport';
+import './initEnv';
+
 import rootRouter from './routes/';
 import {connect} from './db';
 import {startWebsocket} from './ws';
 import updateSeenMiddleware from './middlewares/updateSeen.middleware';
 import logInWithoutRedirect from './middlewares/logInWithoutRedirect.middleware';
-
-import './passport';
-import './initEnv';
 
 
 const app: Application = express();
