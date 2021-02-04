@@ -18,7 +18,12 @@ class NexmoService implements INotify{
 
 	notify(to: string, text: string, opts?: Record<string, any>): Promise<string>{
 		//promisify
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve, r) => {
+			const reject = (err: any) => {
+				console.log(err);
+				r(err);
+			};
+
 			this.nexmo.message.sendSms(this.from, to, text, {}, (err, response) => {
 				//show error
 				if(err)

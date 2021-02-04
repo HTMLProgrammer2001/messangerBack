@@ -7,7 +7,7 @@ import {IFile, IStorage} from './IStorage';
 import codeGenerator from '../../helpers/codeGenerator';
 
 
-class StorageService implements IStorage {
+class AwsStorageService implements IStorage {
 	private awsInstance: S3;
 
 	constructor() {
@@ -24,7 +24,9 @@ class StorageService implements IStorage {
 		return [
 			isSingle ? uploader.single(field) : uploader.array(field),
 			(req: Request, res: Response, next: NextFunction) => {
-				req.file.destination = destination;
+				if(req.file)
+					req.file.destination = destination;
+				
 				next();
 			}
 		];
@@ -69,4 +71,4 @@ class StorageService implements IStorage {
 	}
 }
 
-export default new StorageService();
+export default new AwsStorageService();
