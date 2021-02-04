@@ -19,17 +19,10 @@ jobs:
                with:
                    persistent-credentials: false
 
-            - name: Install and test
-              env:
-                  MONGO_URL: ${{secrets.MONGO_URL}}
-              run: |
-                  npm install
-#                  npm run ci
-
             - name: Build image
               run: docker build -t messanger/server:prod.${{github.sha}} .
 
-            - name: Deploy image 🚀
+            - name: Push to ecr
               uses: jwalton/gh-ecr-push@v1
               with:
                   access-key-id: ${{ secrets.AWS_ACCESS }}
@@ -38,3 +31,11 @@ jobs:
                   local-image: messanger/server:prod.${{github.sha}}
                   is-semver: true
                   image: messanger/server
+
+            - name: Deploy new app
+              uses: chrislennon/action-aws-cli@v1.1
+              # All commands after this point have access to the AWS CLI
+            - run: aws elasticbeanstalk restart-app-server --environment-name Messanger-env
+              env:
+                AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS }}
+                AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET }}

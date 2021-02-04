@@ -31,8 +31,9 @@ app.use('/', rootRouter);
 //error handler
 app.use((err: Errback, req: Request, res: Response, next: NextFunction) => {
 	if(err) {
+		console.dir(err);
 		res.status(500);
-		res.json({error: err.name});
+		res.json({error: err.name, message: JSON.stringify(err)});
 	}
 	else
 		next();
