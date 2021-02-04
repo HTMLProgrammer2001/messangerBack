@@ -27,7 +27,7 @@ jobs:
 #                  npm run ci
 
             - name: Build image
-              run: docker build -t messanger/server .
+              run: docker build -t messanger/server:prod.${{github.sha}} .
 
             - name: Deploy image 🚀
               uses: jwalton/gh-ecr-push@v1
@@ -35,5 +35,6 @@ jobs:
                   access-key-id: ${{ secrets.AWS_ACCESS }}
                   secret-access-key: ${{ secrets.AWS_SECRET }}
                   region: eu-central-1
-                  local-image: messanger/server
-                  image: messanger/server:${{github.sha}}
+                  local-image: messanger/server:prod.${{github.sha}}
+                  is-semver: true
+                  image: messanger/server
