@@ -32,10 +32,11 @@ jobs:
                   is-semver: true
                   image: messanger/server
 
-            - name: Deploy new app
-              uses: chrislennon/action-aws-cli@v1.1
-              # All commands after this point have access to the AWS CLI
-            - run: aws elasticbeanstalk restart-app-server --environment-name Messanger-env
+            - name: Deploy
+              uses: ItsKarma/aws-cli@v1.70.0
+              with:
+                args: elasticbeanstalk restart-app-server --environment-name Messanger-env
               env:
                 AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS }}
                 AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET }}
+                AWS_DEFAULT_REGION: "eu-central-1"
