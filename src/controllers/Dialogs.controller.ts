@@ -11,7 +11,6 @@ import DialogResource from '../resources/DialogResource';
 import {DialogTypes} from '../constants/DialogTypes';
 import {MessageTypes} from '../constants/MessageTypes';
 import NewDialogEvent from '../observer/events/NewDialog.event';
-import NewMessageEvent from '../observer/events/NewMessage.event';
 
 import {dispatch} from '../observer';
 

@@ -34,6 +34,11 @@ type IEditMessageReq = Request<{ messageID: string }, {}, {
 	type: MessageTypes
 }>
 
+type IResendMessageReq = Request<{}, {}, {
+	to: string[],
+	messages: string[]
+}>
+
 class MessagesController {
 	async getMessagesByText(req: IGetMessagesByTextReq, res: Response) {
 		//parse data from QP
@@ -199,6 +204,48 @@ class MessagesController {
 			message: 'Message updated',
 			newMessage: resource
 		});
+	}
+
+	async resendMessage(req: IResendMessageReq, res: Response){
+		const {to, messages} = req.body;
+
+		//check input
+		if(!to?.length || !messages?.length)
+			return res.status(422).json({message: 'Invalid input'});
+
+		const bannedDialogs = await Promise.all(
+			to.map(dlgID => DialogRepository.isBanned(dlgID, req.user._id))
+		);
+
+		if(bannedDialogs.some(isBanned => isBanned))
+			return res.status(401).json({message: 'You was banned in one or more dialogs'});
+
+		//format messages
+		const flatMessages = await messages.reduce(async (acc, msgID) => {
+			const msgModel = await MessageRepository.getById(msgID);
+
+			return msgModel?.type != MessageTypes.RESEND ? [...await acc, msgID] :
+				[...await acc, ...msgModel.resend];
+		}, Promise.resolve([]));
+
+		const newMessages: IMessage[] = [];
+
+		//send message
+		await Promise.all(to.map(async dlgID => {
+			const msg = await MessageRepository.create({
+				type: MessageTypes.RESEND, author: req.user._id, message: 'Resend',
+				dialog: new Types.ObjectId(dlgID) as any, resend: flatMessages, time: new Date()
+			});
+
+			newMessages.push(msg);
+			dispatch(new NewMessageEvent(msg, req.user._id));
+		}));
+
+		//make resource
+		const messagesResource = new MessagesGroupResource(newMessages, req.user._id);
+		await messagesResource.json();
+
+		return res.status(200).json({messages: messagesResource});
 	}
 }
 

@@ -10,7 +10,8 @@ export interface IMessageData {
 	size?: number,
 	time?: Date,
 	readBy?: string[],
-	deletedFor?: string[]
+	deletedFor?: string[],
+	resend?: string[]
 }
 
 export interface IMessage extends Document, IMessageData {}
@@ -50,6 +51,11 @@ const MessageSchema = new Schema<IMessage>({
 		type: [String],
 		default: [],
 		ref: 'User'
+	},
+	resend: {
+		type: [String],
+		ref: 'Message',
+		default: []
 	},
 	options: {
 		type: Object,

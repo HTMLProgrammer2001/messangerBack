@@ -3,8 +3,10 @@ import {IMessage} from '../models/Message.model';
 
 import UserResource from './UserResource';
 import DialogResource from './DialogResource';
+import MessagesGroupResource from './MessagesGroupResource';
 import UserRepository from '../repositories/User.repository';
 import DialogRepository from '../repositories/Dialog.repository';
+import MessageRepository from '../repositories/Message.repository';
 
 
 class MessageResource extends Resource<IMessage>{
@@ -36,6 +38,14 @@ class MessageResource extends Resource<IMessage>{
 			}
 		}
 
+		//populate resend messages
+		const populated = await MessageRepository.getById(this.data._id)
+			.populate('resend')
+			.exec() as IMessage & {resend: IMessage[]};
+
+		const resendMessages = new MessagesGroupResource(populated.resend || [], this.userID);
+		await resendMessages.json();
+
 		return {
 			_id: this.data._id,
 			type: this.data.type,
@@ -43,6 +53,7 @@ class MessageResource extends Resource<IMessage>{
 			url: this.data.url,
 			time: this.data.time,
 			size: this.data.size,
+			resend: resendMessages.toJSON(),
 			readed: this.data.readBy.includes(this.userID.toString()) ||
 				(this.data.author.toString() == this.userID.toString() && this.data.readBy.length),
 			author, dialog

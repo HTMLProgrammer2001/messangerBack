@@ -41,4 +41,6 @@ messagesRouter.put('/:messageID',
 	MessagesController.editMessage
 );
 
+messagesRouter.post('/resend', MessagesController.resendMessage);
+
 export default messagesRouter;

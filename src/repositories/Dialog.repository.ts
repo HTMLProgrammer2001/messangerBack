@@ -2,6 +2,7 @@ import {Schema, Types} from 'mongoose';
 
 import Dialog, {IDialog, IDialogData} from '../models/Dialog.model';
 import Message from '../models/Message.model';
+import UserRepository from './User.repository';
 import {DialogTypes} from '../constants/DialogTypes';
 import {IPaginateResponse} from '../interfaces/IPaginateData';
 
@@ -107,6 +108,26 @@ class DialogRepository {
 		});
 
 		return dialog;
+	}
+
+	async isBanned(dlgID: string, userID: Types.ObjectId){
+		const dlg = await this.getDialogById(dlgID);
+
+		if(!dlg)
+			return true;
+
+		if(dlg.type == DialogTypes.PERSONAL){
+			let secondUserID = dlg.participants[0].user;
+
+			if(secondUserID.toString() == userID.toString())
+				secondUserID = dlg.participants[1].user;
+
+			const secondUser = await UserRepository.getById(secondUserID);
+			return secondUser.banned.includes(userID.toString());
+		}
+		else if(dlg.type == DialogTypes.CHAT){
+			return false;
+		}
 	}
 }
 
