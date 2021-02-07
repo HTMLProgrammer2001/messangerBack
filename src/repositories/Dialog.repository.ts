@@ -46,9 +46,7 @@ class DialogRepository {
 	getDialogsBy(field: string, {val, pageSize, page, id}: {val: any, id: any, pageSize: number, page: number}): any{
 		//make request
 		const filteredDialogsReq = Dialog.aggregate([
-			{$limit: 1},
-			{$project: {_id: 1}},
-			{$project: {_id: 0}},
+			{$limit: 1}, {$project: {_id: 1}}, {$project: {_id: 0}},
 			{
 				$lookup: {
 					from: 'dialogs', pipeline: [

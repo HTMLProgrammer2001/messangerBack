@@ -5,10 +5,13 @@ import UserResource from '../resources/UserResource';
 
 import {dispatch} from '../observer';
 import BanEvent from '../observer/events/Ban.event';
+import UsersGroupResource from '../resources/UsersGroupResource';
 
 
 type IGetUserRequest = Request<{ nickname: string }>
 type IBanUserRequest = Request<{}, {}, { id: any }>
+type IGetFriendsByName = Request<{}, {}, {name: string, page: number, pageSize: number}>
+type IGetFriendsByNick = Request<{}, {}, {nick: string, page: number, pageSize: number}>
 
 class UsersController {
 	async getUser(req: IGetUserRequest, res: Response) {
@@ -46,6 +49,50 @@ class UsersController {
 		await resource.json();
 
 		return res.json({message: 'User ban toggled', newUser: resource.toJSON()})
+	}
+
+	async getFriendsByName(req: IGetFriendsByName, res: Response){
+		//get data
+		const {name, page, pageSize} = req.query,
+			{_id} = req.user;
+
+		const parsedPage = +page || 1,
+			parsedPageSize = +pageSize || 5;
+
+		//make query to db
+		const friends = await UsersRepository.getFriendsByFieldFor(_id, {
+			field: 'name',
+			val: (name || '') as string,
+			page: parsedPage, pageSize: parsedPageSize
+		});
+
+		//create resource
+		const resource = new UsersGroupResource(friends, req.user.id);
+		await resource.json();
+
+		return res.status(200).json({data: friends, page, pageSize});
+	}
+
+	async getFriendsByNick(req: IGetFriendsByNick, res: Response){
+		//get data
+		const {nick, page, pageSize} = req.query,
+			{_id} = req.user;
+
+		const parsedPage = +page || 1,
+			parsedPageSize = +pageSize || 5;
+
+		//make query to db
+		const friends = await UsersRepository.getFriendsByFieldFor(_id, {
+			field: 'nick',
+			val: (nick || '') as string,
+			page: parsedPage, pageSize: parsedPageSize
+		});
+
+		//create resource
+		const resource = new UsersGroupResource(friends, req.user.id);
+		await resource.json();
+
+		return res.status(200).json({data: friends, page: parsedPage, pageSize: parsedPageSize});
 	}
 }
 

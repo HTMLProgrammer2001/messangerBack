@@ -20,4 +20,7 @@ usersRouter.get('/nickname/:nickname',
 	UsersController.getUser
 );
 
+usersRouter.get('/friends/name', UsersController.getFriendsByName);
+usersRouter.get('/friends/nick', UsersController.getFriendsByNick);
+
 export default usersRouter;

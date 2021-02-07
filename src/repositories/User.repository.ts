@@ -1,6 +1,8 @@
 import {Schema, Types} from 'mongoose';
 
 import User, {IUserData} from '../models/User.model';
+import Dialog from '../models/Dialog.model';
+import {DialogTypes} from '../constants/DialogTypes';
 
 
 class UserRepository{
@@ -24,6 +26,21 @@ class UserRepository{
 
 	async getByNick(nick: string){
 		return User.findOne({nickname: nick});
+	}
+
+	async getFriendsByFieldFor(userID: string | Types.ObjectId, {field, val, page, pageSize} =
+		{field: '', val: '', page: 1, pageSize: 1}){
+		
+		const friends = await Dialog.aggregate([
+			{$match: {type: DialogTypes.PERSONAL, participants: {$elemMatch: {user: userID}}}},
+			{$unwind: '$participants'},
+			{$match: {'participants.user': {$ne: userID}}},
+			{$lookup: {from: 'users', localField: 'participants.user', as: 'user', foreignField: '_id'}},
+			{$replaceRoot: {newRoot: {$arrayElemAt: ['$user', 0]}}},
+			{$match: {[field]: {$regex: val, $options: 'i'}}}
+		]).skip(pageSize * (page - 1)).limit(pageSize);
+
+		return friends;
 	}
 }
 
