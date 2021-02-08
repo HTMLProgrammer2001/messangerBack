@@ -1,18 +1,17 @@
-import {Schema, Document, model} from 'mongoose';
+import {Schema, Document, model, Types} from 'mongoose';
 
 import {DialogTypes} from '../constants/DialogTypes';
+import {PartRoles} from '../constants/PartRoles';
 
 
 export interface IDialogData {
 	type: DialogTypes,
 	groupOptions?: {
 		title: string,
-		description?: string,
-		avatar?: string,
-		nick: string
+		avatar?: string
 	},
-	participants: Array<{user: Schema.Types.ObjectId, role?: number}>,
-	lastMessage?: Schema.Types.ObjectId
+	participants: Array<{user: Types.ObjectId, role?: PartRoles}>,
+	lastMessage?: Types.ObjectId
 }
 
 export interface IDialog extends Document, IDialogData{}
@@ -27,18 +26,9 @@ const DialogSchema = new Schema<IDialog>({
 				minlength: 4,
 				maxlength: 32
 			},
-			description: {
-				type: String,
-				required: false
-			},
 			avatar: {
 				type: String,
 				required: true
-			},
-			nick: {
-				type: String,
-				required: false,
-				sparse: true
 			}
 		},
 		required: false
@@ -46,7 +36,7 @@ const DialogSchema = new Schema<IDialog>({
 	participants: [{
 		role: {
 			type: Number,
-			default: 1
+			default: PartRoles.USER
 		},
 		user: {
 			type: Schema.Types.ObjectId,

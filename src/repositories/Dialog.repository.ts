@@ -120,7 +120,7 @@ class DialogRepository {
 			if(secondUserID.toString() == userID.toString())
 				secondUserID = dlg.participants[1].user;
 
-			const secondUser = await UserRepository.getById(secondUserID);
+			const secondUser = await UserRepository.getById(secondUserID.toString());
 			return secondUser.banned.includes(userID.toString());
 		}
 		else if(dlg.type == DialogTypes.CHAT){

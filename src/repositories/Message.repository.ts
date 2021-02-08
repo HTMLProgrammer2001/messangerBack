@@ -16,7 +16,7 @@ class MessageRepository{
 		return message;
 	}
 
-	getById(id: Schema.Types.ObjectId | string){
+	getById(id: Types.ObjectId | string){
 		return Message.findById(id)
 	}
 

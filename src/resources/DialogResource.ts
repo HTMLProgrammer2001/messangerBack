@@ -61,8 +61,7 @@ class DialogResource extends Resource<IDialog>{
 	private async getOptsForChat(): Promise<Object>{
 		return {
 			name: this.data.groupOptions?.title,
-			avatar: this.data.groupOptions?.avatar,
-			nick: this.data.groupOptions?.nick
+			avatar: this.data.groupOptions?.avatar
 		}
 	}
 }

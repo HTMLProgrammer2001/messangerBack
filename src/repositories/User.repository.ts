@@ -16,7 +16,7 @@ class UserRepository{
 		return this.getById(id);
 	}
 
-	async getById(id: Schema.Types.ObjectId){
+	async getById(id: Types.ObjectId | string | Schema.Types.ObjectId){
 		return User.findById(id);
 	}
 

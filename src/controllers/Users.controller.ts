@@ -83,7 +83,7 @@ class UsersController {
 
 		//make query to db
 		const friends = await UsersRepository.getFriendsByFieldFor(_id, {
-			field: 'nick',
+			field: 'nickname',
 			val: (nick || '') as string,
 			page: parsedPage, pageSize: parsedPageSize
 		});
