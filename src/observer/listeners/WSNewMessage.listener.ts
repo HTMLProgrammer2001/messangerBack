@@ -20,7 +20,7 @@ const WSNewMessageListener: IListener = async (event: NewMessageEvent) => {
 
 	//send to sockets
 	(populatedMessage.dialog as any as IDialog).participants.map(({user}) => {
-		if(user.toString() != curUser.toString())
+		if(event.getBroadcast() || user.toString() != curUser.toString())
 			io.to(user.toString()).emit('newMessage', msgJson);
 	});
 };

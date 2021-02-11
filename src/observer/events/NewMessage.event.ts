@@ -5,10 +5,20 @@ import {IEvent} from '../../interfaces/IEvent';
 
 
 class NewMessageEvent implements IEvent{
-	constructor(private message: IMessage, private user: Types.ObjectId){}
+	private isBroadcast = false;
+	constructor(private message: IMessage, private user?: Types.ObjectId){}
 
 	getMessage(): IMessage{
 		return this.message;
+	}
+
+	broadcast(){
+		this.isBroadcast = true;
+		return this;
+	}
+
+	getBroadcast(){
+		return this.isBroadcast;
 	}
 
 	getUser(){

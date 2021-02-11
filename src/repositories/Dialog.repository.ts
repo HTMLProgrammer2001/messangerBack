@@ -5,22 +5,23 @@ import Message from '../models/Message.model';
 import UserRepository from './User.repository';
 import {DialogTypes} from '../constants/DialogTypes';
 import {IPaginateResponse} from '../interfaces/IPaginateData';
+import {IParticipant} from '../interfaces/IParticipant';
 
 
 type IPaginateFor = IPaginateResponse<IDialog> | undefined;
 
 class DialogRepository {
-	async create(data: IDialogData){
+	async create(data: IDialogData) {
 		const dialog = new Dialog(data);
 		return dialog.save();
 	}
 
-	async update(id: Schema.Types.ObjectId, data: Partial<IDialogData>){
+	async update(id: Types.ObjectId, data: Partial<IDialogData>) {
 		await Dialog.findByIdAndUpdate(id, data);
 		return this.getDialogById(id);
 	}
 
-	getDialogById(id: Schema.Types.ObjectId | string){
+	getDialogById(id: Types.ObjectId | string) {
 		return Dialog.findById(id);
 	}
 
@@ -28,22 +29,22 @@ class DialogRepository {
 		//find chat with this nick
 		const chat = await Dialog.findOne({type: DialogTypes.CHAT, nickname});
 
-		if(chat)
+		if (chat)
 			return chat;
 
 		//find personal chat with nick
 		const personal = await Dialog.aggregate([
-				{$match: {type: DialogTypes.PERSONAL}},
-				{$lookup: {from: 'users', localField: 'participants.user', foreignField: '_id', as: 'users'}},
-				{$match: {users: {$elemMatch: {nickname, _id: {$ne: id}}}}},
-				{$match: {users: {$elemMatch: {_id: id}}}},
-				{$project: {users: 0}}
-			]);
+			{$match: {type: DialogTypes.PERSONAL}},
+			{$lookup: {from: 'users', localField: 'participants.user', foreignField: '_id', as: 'users'}},
+			{$match: {users: {$elemMatch: {nickname, _id: {$ne: id}}}}},
+			{$match: {users: {$elemMatch: {_id: id}}}},
+			{$project: {users: 0}}
+		]);
 
 		return personal[0];
 	}
 
-	getDialogsBy(field: string, {val, pageSize, page, id}: {val: any, id: any, pageSize: number, page: number}): any{
+	getDialogsBy(field: string, {val, pageSize, page, id}: { val: any, id: any, pageSize: number, page: number }): any {
 		//make request
 		const filteredDialogsReq = Dialog.aggregate([
 			{$limit: 1}, {$project: {_id: 1}}, {$project: {_id: 0}},
@@ -63,9 +64,22 @@ class DialogRepository {
 			},
 
 			{
+				$lookup: {
+					from: 'dialogs', pipeline: [
+						{$match: {type: DialogTypes.CHAT, participants: {$elemMatch: {user: id}}}},
+						{$match: {[`groupOptions.${field == 'name' ? 'title' : ''}`]: {$regex: val, $options: 'i'}}},
+						{$lookup: {localField: 'lastMessage', from: 'messages', foreignField: '_id', as: 'message'}},
+						{$sort: {'message.time': -1}}
+					], as: 'chat'
+				}
+			},
+
+			{$addFields: {dialogs: {$concatArrays: ['$personal', '$chat']}}},
+
+			{
 				$replaceRoot: {
 					newRoot: {
-						data: {$slice: ['$personal', pageSize * (page - 1), pageSize]}, total: {$size: '$personal'}
+						data: {$slice: ['$dialogs', pageSize * (page - 1), pageSize]}, total: {$size: '$dialogs'}
 					}
 				}
 			},
@@ -85,7 +99,7 @@ class DialogRepository {
 		return filteredDialogs[0];
 	}
 
-	async paginateByNameFor(id: string | Schema.Types.ObjectId, {name = '', pageSize = 5, page = 1} = {}): Promise<IPaginateFor> {
+	async paginateByNameFor(id: string | Types.ObjectId, {name = '', pageSize = 5, page = 1} = {}): Promise<IPaginateFor> {
 		//get paginated dialogs
 		const filteredDialogsReq = this.getDialogsBy('name', {val: name, page, pageSize, id});
 
@@ -93,39 +107,80 @@ class DialogRepository {
 		return filteredDialogs[0];
 	}
 
-	async clearFor(userID: Schema.Types.ObjectId, dlgId: Schema.Types.ObjectId){
+	async clearFor(userID: Types.ObjectId, dlgId: Types.ObjectId) {
 		return await Message.updateMany({dialog: dlgId}, {
 			$addToSet: {deletedFor: userID.toString()}
 		});
 	}
 
-	async getDialogWith(user: Types.ObjectId, wit: Types.ObjectId){
+	async getDialogWith(user: Types.ObjectId, wit: Types.ObjectId) {
 		const dialog = await Dialog.findOne({
 			type: DialogTypes.PERSONAL,
-			"participants.user": {$all: [user, wit]}
+			'participants.user': {$all: [user, wit]}
 		});
 
 		return dialog;
 	}
 
-	async isBanned(dlgID: string, userID: Types.ObjectId){
+	async isBanned(dlgID: string, userID: Types.ObjectId) {
 		const dlg = await this.getDialogById(dlgID);
 
-		if(!dlg)
+		if (!dlg)
 			return true;
 
-		if(dlg.type == DialogTypes.PERSONAL){
+		if (dlg.type == DialogTypes.PERSONAL) {
 			let secondUserID = dlg.participants[0].user;
 
-			if(secondUserID.toString() == userID.toString())
+			if (secondUserID.toString() == userID.toString())
 				secondUserID = dlg.participants[1].user;
 
 			const secondUser = await UserRepository.getById(secondUserID.toString());
 			return secondUser.banned.includes(userID.toString());
-		}
-		else if(dlg.type == DialogTypes.CHAT){
+		} else if (dlg.type == DialogTypes.CHAT) {
 			return false;
 		}
+	}
+
+	async getParticipants(dialogID: string){
+		return Dialog.aggregate([
+			{$match: {_id: new Types.ObjectId(dialogID)}},
+			{$unwind: '$participants'},
+			{$match: {'participants.bannedAt': {$exists: false}, 'participants.leaveAt': {$exists: false}}},
+			{$replaceRoot: {newRoot: '$participants'}},
+			{$lookup: {from: 'users', localField: 'user', foreignField: '_id', as: 'user'}},
+			{$project: {role: 1, user: {$arrayElemAt: ['$user', 0]}}}
+		]);
+	}
+
+	async getParticipant(dialogID: string, userID: string){
+		const participants = await this.getParticipants(dialogID);
+		return participants.find(part => part.user._id.toString() == userID.toString());
+	}
+
+	async updateParticipant(dialogID: string, userID: string, part: Partial<IParticipant>){
+		const setter: Record<string, any> = {};
+
+		for(let [key, val] of Object.entries(part))
+			setter[`participants.$.${key}`] = val;
+
+		await Dialog.update({_id: new Types.ObjectId(dialogID), 'participants.user': userID}, {
+			$set: setter
+		});
+	}
+
+	async getMyRoleFor(dialogID: string | Types.ObjectId, user: string | Types.ObjectId){
+		const role = await Dialog.aggregate([
+			{$match: {type: DialogTypes.CHAT, _id: dialogID}},
+			{$unwind: '$participants'},
+			{$match: {'participants.user': user}},
+			{$replaceRoot: {newRoot: '$participants'}}
+		]);
+
+		return role[0]?.role;
+	}
+
+	async isActive(dialogID: string | Types.ObjectId, user: string | Types.ObjectId){
+		return true;
 	}
 }
 

@@ -1,9 +1,9 @@
-import {Document, model, Schema} from 'mongoose';
+import {Document, model, Schema, Types} from 'mongoose';
 
 
 export interface IMessageData {
-	dialog: Schema.Types.ObjectId,
-	author: Schema.Types.ObjectId,
+	dialog: Types.ObjectId,
+	author: Types.ObjectId,
 	type: number,
 	message?: string,
 	url?: string,

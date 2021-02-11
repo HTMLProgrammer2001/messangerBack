@@ -19,8 +19,7 @@ export const getDialogsByNameValidators = [
 
 export const getDialogValidators = [
 	param('nickname').isLength({min: 4, max: 32})
-		.withMessage('Nickname must be from 4 to 32 chars').bail()
-		.custom(existsCustomValidator(User, 'nickname')).withMessage('No dialogs with this nickname')
+		.withMessage('Nickname must be from 4 to 32 chars')
 ];
 
 export const createPersonalValidators = [

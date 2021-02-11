@@ -5,6 +5,7 @@ import Resource from './Resource';
 import MessageResource from './MessageResource';
 import MessageRepository from '../repositories/Message.repository';
 import UserRepository from '../repositories/User.repository';
+import DialogRepository from '../repositories/Dialog.repository';
 
 
 class DialogResource extends Resource<IDialog>{
@@ -61,7 +62,10 @@ class DialogResource extends Resource<IDialog>{
 	private async getOptsForChat(): Promise<Object>{
 		return {
 			name: this.data.groupOptions?.title,
-			avatar: this.data.groupOptions?.avatar
+			avatar: this.data.groupOptions?.avatar,
+			nick: this.data._id,
+			isActive: await DialogRepository.isActive(this.data._id, this.userID),
+			myRole: await DialogRepository.getMyRoleFor(this.data._id, this.userID)
 		}
 	}
 }

@@ -113,16 +113,30 @@ class DialogsController{
 	}
 
 	async getDialog(req: IGetDialogRequest, res: Response){
-		const dialog = await DialogRepository.getDialogByNick(req.user._id, req.params.nickname),
-			data = new DialogResource(dialog, req.user._id);
+		//get dialog from db
+		let dialogNick = await DialogRepository.getDialogByNick(req.user._id, req.params.nickname),
+			dialogID: IDialog = null;
 
+		//find by id
+		try {
+			if (!dialogNick)
+				dialogID = await DialogRepository.getDialogById(req.params.nickname);
+		}
+		catch (e) {
+			return res.status(404).json({message: 'No dialog'});
+		}
+
+		const dialog = dialogNick || dialogID;
+
+		if(!dialog)
+			return res.status(422).json({message: 'No dialog with this id or nickname'});
+
+		//create resource
+		const data = new DialogResource(dialog, req.user._id);
 		await data.json();
 
 		//send response
-		if(dialog)
-			return res.json({message: 'Dialog found', dialog: data});
-
-		return res.status(404).json({message: 'No dialog with this nick'});
+		return res.json({message: 'Dialog found', dialog: data});
 	}
 
 	async clearDialog(req: IClearRequest, res: Response){
