@@ -10,10 +10,11 @@ import MessagesGroupResource from '../resources/MessagesGroupResource';
 import MessageResource from '../resources/MessageResource';
 import StorageService from '../services/StorageService/';
 import NewMessageEvent from '../observer/events/NewMessage.event';
-
-import {dispatch} from '../observer';
 import UpdateMessageEvent from '../observer/events/UpdateMessage.event';
 import DeleteMessageEvent from '../observer/events/DeleteMessage.event';
+
+import {dispatch} from '../observer';
+import gate from '../can/';
 
 
 type IGetMessagesByTextReq = Request<{}, {}, {}, { text?: string, page?: number, pageSize?: number }>;
@@ -97,7 +98,7 @@ class MessagesController {
 			return res.status(422).json({message: 'No dialog with this id'});
 
 		//check if user is participant
-		if (!dlg.participants.some(part => part.user.toString() == userID.toString()))
+		if (!dlg.participants.some(part => part.user.toString() == userID.toString() && !part.bannedAt && !part.leaveAt))
 			return res.status(403).json({
 				message: 'You are not active participant of this dialog'
 			});
@@ -141,8 +142,10 @@ class MessagesController {
 			if (!msg)
 				return res.status(404).json({message: 'No message with this id'});
 
+			const canDelete = await gate.can('deleteMessage', req.user, messageID);
+
 			//check error
-			if (isOther && (msg.author.toString() != req.user?.id))
+			if (!canDelete)
 				return res.status(403).json({message: 'You cannot delete this messages'});
 
 			if (!isOther)

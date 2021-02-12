@@ -6,6 +6,7 @@ import UserRepository from './User.repository';
 import {DialogTypes} from '../constants/DialogTypes';
 import {IPaginateResponse} from '../interfaces/IPaginateData';
 import {IParticipant} from '../interfaces/IParticipant';
+import {PartRoles} from '../constants/PartRoles';
 
 
 type IPaginateFor = IPaginateResponse<IDialog> | undefined;
@@ -129,15 +130,22 @@ class DialogRepository {
 			return true;
 
 		if (dlg.type == DialogTypes.PERSONAL) {
+			//find another user
 			let secondUserID = dlg.participants[0].user;
 
 			if (secondUserID.toString() == userID.toString())
 				secondUserID = dlg.participants[1].user;
 
+			//check ban
 			const secondUser = await UserRepository.getById(secondUserID.toString());
 			return secondUser.banned.includes(userID.toString());
 		} else if (dlg.type == DialogTypes.CHAT) {
-			return false;
+			//find index of delete in group
+			const index = dlg.participants.findIndex(part => {
+				return part.user.toString() == userID.toString() && !part.leaveAt && !part.bannedAt
+			});
+
+			return index == -1;
 		}
 	}
 
@@ -145,7 +153,10 @@ class DialogRepository {
 		return Dialog.aggregate([
 			{$match: {_id: new Types.ObjectId(dialogID)}},
 			{$unwind: '$participants'},
-			{$match: {'participants.bannedAt': {$exists: false}, 'participants.leaveAt': {$exists: false}}},
+			{$match: {
+				'participants.bannedAt': {$type: 10},
+				'participants.leaveAt': {$type: 10}
+			}},
 			{$replaceRoot: {newRoot: '$participants'}},
 			{$lookup: {from: 'users', localField: 'user', foreignField: '_id', as: 'user'}},
 			{$project: {role: 1, user: {$arrayElemAt: ['$user', 0]}}}
@@ -163,9 +174,11 @@ class DialogRepository {
 		for(let [key, val] of Object.entries(part))
 			setter[`participants.$.${key}`] = val;
 
-		await Dialog.update({_id: new Types.ObjectId(dialogID), 'participants.user': userID}, {
-			$set: setter
-		});
+		await Dialog.update({
+			_id: new Types.ObjectId(dialogID),
+			'participants.user': Types.ObjectId(userID),
+			type: DialogTypes.CHAT
+		}, {$set: setter});
 	}
 
 	async getMyRoleFor(dialogID: string | Types.ObjectId, user: string | Types.ObjectId){
@@ -180,7 +193,22 @@ class DialogRepository {
 	}
 
 	async isActive(dialogID: string | Types.ObjectId, user: string | Types.ObjectId){
-		return true;
+		const part = await this.getParticipant(dialogID.toString(), user.toString());
+		return !!part && Boolean(!part.bannedAt && !part.leaveAt);
+	}
+
+	async deleteGroup(id: string | Types.ObjectId){
+		return Dialog.updateOne({_id: Types.ObjectId(id.toString())}, {
+			$set: {'participants.$[].bannedAt': new Date()}
+		});
+	}
+
+	async leave(dialogID: string | Types.ObjectId, user: string | Types.ObjectId){
+		return this.updateParticipant(dialogID.toString(), user.toString(), {leaveAt: new Date()});
+	}
+
+	async ban(dialogID: string | Types.ObjectId, user: string | Types.ObjectId){
+		return this.updateParticipant(dialogID.toString(), user.toString(), {bannedAt: new Date()});
 	}
 }
 

@@ -1,10 +1,10 @@
-import {IUser} from '../models/User.model';
+import {Types} from 'mongoose';
 import {PartRoles} from '../constants/PartRoles';
 
 
 export type IParticipant = {
-	user: IUser,
-	role: PartRoles,
-	bannedAt: Date,
-	leaveAt: Date
+	user: string | Types.ObjectId,
+	role?: PartRoles,
+	bannedAt?: Date,
+	leaveAt?: Date
 }

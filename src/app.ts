@@ -6,6 +6,7 @@ import cors from 'cors';
 
 import './passport';
 import './initEnv';
+import './can/initRules';
 
 import rootRouter from './routes/';
 import {connect} from './db';

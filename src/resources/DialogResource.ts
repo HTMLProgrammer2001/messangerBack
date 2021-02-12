@@ -47,7 +47,7 @@ class DialogResource extends Resource<IDialog>{
 		if(userID.toString() == this.userID.toString())
 			userID = this.data.participants[1].user;
 
-		const userModel = await UserRepository.getById(userID);
+		const userModel = await UserRepository.getById(userID.toString());
 
 		//return data
 		return {

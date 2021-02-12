@@ -2,6 +2,7 @@ import {Schema, Document, model, Types} from 'mongoose';
 
 import {DialogTypes} from '../constants/DialogTypes';
 import {PartRoles} from '../constants/PartRoles';
+import {IParticipant} from '../interfaces/IParticipant';
 
 
 export interface IDialogData {
@@ -10,7 +11,7 @@ export interface IDialogData {
 		title: string,
 		avatar?: string
 	},
-	participants: Array<{user: Types.ObjectId, role?: PartRoles}>,
+	participants: Array<IParticipant>,
 	lastMessage?: Types.ObjectId
 }
 
@@ -41,6 +42,14 @@ const DialogSchema = new Schema<IDialog>({
 		user: {
 			type: Schema.Types.ObjectId,
 			ref: 'User'
+		},
+		bannedAt: {
+			type: Date,
+			default: null
+		},
+		leaveAt: {
+			type: Date,
+			default: null
 		}
 	}],
 	lastMessage: {

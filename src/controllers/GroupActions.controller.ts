@@ -2,22 +2,25 @@ import {Request, Response} from 'express';
 import {Types} from 'mongoose';
 
 import DialogRepository from '../repositories/Dialog.repository';
-import UserRepository from '../repositories/User.repository';
 import MessageRepository from '../repositories/Message.repository';
 
 import {DialogTypes} from '../constants/DialogTypes';
 import {PartRoles} from '../constants/PartRoles';
 import {MessageTypes} from '../constants/MessageTypes';
 import NewDialogEvent from '../observer/events/NewDialog.event';
+import NewMessageEvent from '../observer/events/NewMessage.event';
 import DialogResource from '../resources/DialogResource';
 
 import {dispatch} from '../observer';
-import NewMessageEvent from '../observer/events/NewMessage.event';
+import gate from '../can';
 
 
 type IGroupCreateRequest = Request<{}, {}, {participants: string[], name: string}>
 type IGetParticipantsRequest = Request<{}, {}, {}, {dialog: string}>
 type IChangeAdminRequest = Request<{}, {}, {dialog: string, user: string}>
+type IDeleteGroupRequest = Request<{id: string}, {}, {}, {}>
+type ILeaveGroupRequest = Request<{}, {}, {dialog: string}>
+type IBanRequest = Request<{}, {}, {dialog: string, user: string}>
 
 class GroupActionsController{
 	async create(req: IGroupCreateRequest, res: Response){
@@ -28,12 +31,11 @@ class GroupActionsController{
 		if(participants.length < 2 || !name)
 			return res.status(422).json({message: 'Invalid input'});
 
-		const bannedUsers = await Promise.all(participants.map(async userID => {
-			const user = await UserRepository.getById(userID);
-			return user?.banned.includes(req.user.id);
-		}));
+		const canInviteUsers = await Promise.all(participants.map(
+			(userID) => gate.can('invite', userID)
+		));
 
-		if(bannedUsers.some(e => e))
+		if(canInviteUsers.every(e => e))
 			return res.status(403).json({message: 'You are banned by one or more users'});
 
 		//parse participants
@@ -81,20 +83,42 @@ class GroupActionsController{
 
 	}
 
-	async deleteGroup(){
+	async deleteGroup(req: IDeleteGroupRequest, res: Response){
+		if(!await gate.can('deleteGroup', req.user, req.params.id))
+			return res.status(403).json({message: 'Only owner can perform this action'});
 
+		await DialogRepository.deleteGroup(req.params.id);
+		return res.json({message: 'Dialog successfully deleted'});
 	}
 
 	async invite(){
 
 	}
 
-	async leave(){
+	async leave(req: ILeaveGroupRequest, res: Response){
+		//check data
+		const canLeave = await gate.can('leave', req.user, req.body.dialog);
 
+		if(!canLeave)
+			return res.status(422).json({message: 'Owner can not leave dialog'});
+
+		//leave
+		await DialogRepository.leave(req.body.dialog, req.user.id);
+
+		//create message
+		const msg = await MessageRepository.create({
+			type: MessageTypes.SPECIAL,
+			dialog: Types.ObjectId(req.body.dialog), author: req.user.id,
+			message: `${req.user.name} leaved`
+		});
+
+		//send event to websocket
+		dispatch(new NewMessageEvent(msg, req.user.id).broadcast());
+		return res.json({message: 'You successfully leave dialog'});
 	}
 
-	async ban(){
-
+	async ban(req: IBanRequest, res: Response){
+		return res.json({message: 'You successfully banned user'});
 	}
 
 	async changeAdmin(req: IChangeAdminRequest, res: Response){

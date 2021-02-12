@@ -12,5 +12,7 @@ groupsRouter.post('/', GroupActionsController.create);
 groupsRouter.get('/participants', GroupActionsController.getParticipants);
 groupsRouter.post('/changeAdmin', GroupActionsController.changeAdmin);
 groupsRouter.post('/changeOwner', GroupActionsController.changeOwner);
+groupsRouter.post('/leave', GroupActionsController.leave);
+groupsRouter.delete('/:id', GroupActionsController.deleteGroup);
 
 export default groupsRouter;
