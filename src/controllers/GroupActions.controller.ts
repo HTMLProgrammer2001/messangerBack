@@ -56,7 +56,8 @@ class GroupActionsController{
 			author: user._id,
 			dialog: dialog._id,
 			type: MessageTypes.SPECIAL,
-			message: 'Dialog start'
+			message: 'Dialog start',
+			time: new Date()
 		});
 
 		dialog = await DialogRepository.update(dialog._id, {lastMessage: msg._id});
@@ -66,7 +67,7 @@ class GroupActionsController{
 		await dlgResource.json();
 
 		//send events
-		dispatch(new NewDialogEvent(dialog, req.user._id));
+		dispatch(new NewDialogEvent(dialog, req.user._id).broadcast());
 
 		//return response
 		return res.json({
@@ -87,7 +88,18 @@ class GroupActionsController{
 		if(!await gate.can('deleteGroup', req.user, req.params.id))
 			return res.status(403).json({message: 'Only owner can perform this action'});
 
+		//create message
+		const msg = await MessageRepository.create({
+			type: MessageTypes.SPECIAL,
+			dialog: Types.ObjectId(req.params.id), author: req.user.id,
+			message: 'Group deleted',
+			time: new Date()
+		});
+
 		await DialogRepository.deleteGroup(req.params.id);
+
+		//send event to websocket
+		dispatch(new NewMessageEvent(msg, req.user.id).broadcast());
 		return res.json({message: 'Dialog successfully deleted'});
 	}
 
@@ -102,15 +114,16 @@ class GroupActionsController{
 		if(!canLeave)
 			return res.status(422).json({message: 'Owner can not leave dialog'});
 
-		//leave
-		await DialogRepository.leave(req.body.dialog, req.user.id);
-
 		//create message
 		const msg = await MessageRepository.create({
 			type: MessageTypes.SPECIAL,
 			dialog: Types.ObjectId(req.body.dialog), author: req.user.id,
-			message: `${req.user.name} leaved`
+			message: `${req.user.name} leaved`,
+			time: new Date()
 		});
+
+		//leave
+		await DialogRepository.leave(req.body.dialog, req.user.id);
 
 		//send event to websocket
 		dispatch(new NewMessageEvent(msg, req.user.id).broadcast());
@@ -118,6 +131,28 @@ class GroupActionsController{
 	}
 
 	async ban(req: IBanRequest, res: Response){
+		const part = await DialogRepository.getParticipant(req.body.dialog, req.body.user);
+
+		if(!part || part.banTime)
+			return res.status(422).json({message: 'No participant'});
+
+		const canBan = await gate.can('ban', req.user, req.body.user, req.body.dialog);
+
+		if(!canBan)
+			return res.status(403).json({message: 'You can not ban this user'});
+
+		//create message
+		const msg = await MessageRepository.create({
+			type: MessageTypes.SPECIAL,
+			dialog: Types.ObjectId(req.body.dialog), author: req.user.id,
+			message: `${part.user.name} banned`,
+			time: new Date()
+		});
+
+		await DialogRepository.ban(req.body.dialog, req.body.user);
+
+		//send event to websocket
+		dispatch(new NewMessageEvent(msg, req.user.id).broadcast());
 		return res.json({message: 'You successfully banned user'});
 	}
 
@@ -131,7 +166,7 @@ class GroupActionsController{
 		if(!myPart || myPart.role != PartRoles.OWNER)
 			return res.status(403).json({message: 'Only owner can perform this action'});
 
-		if(!userPart)
+		if(!userPart || userPart.banTime)
 			return res.status(404).json({message: 'No user in dialog'});
 
 		const isUpgrade = userPart.role == PartRoles.USER;
@@ -145,7 +180,8 @@ class GroupActionsController{
 		const msg = await MessageRepository.create({
 			type: MessageTypes.SPECIAL,
 			dialog: Types.ObjectId(dialog), author: req.user.id,
-			message: `${userPart.user.name} ${isUpgrade ? 'upgraded to admin' : 'downgraded to user'}`
+			message: `${userPart.user.name} ${isUpgrade ? 'upgraded to admin' : 'downgraded to user'}`,
+			time: new Date()
 		});
 
 		//send event to websocket
@@ -163,7 +199,7 @@ class GroupActionsController{
 		if(!myPart || myPart.role != PartRoles.OWNER)
 			return res.status(403).json({message: 'Only owner can perform this action'});
 
-		if(!userPart)
+		if(!userPart || userPart.banTime)
 			return res.status(404).json({message: 'No user in dialog'});
 
 		//update participant
@@ -174,7 +210,8 @@ class GroupActionsController{
 		const msg = await MessageRepository.create({
 			type: MessageTypes.SPECIAL,
 			dialog: Types.ObjectId(dialog), author: req.user.id,
-			message: `${userPart.user.name} is owner now`
+			message: `${userPart.user.name} is owner now`,
+			time: new Date()
 		});
 
 		//send event to websocket
@@ -186,7 +223,8 @@ class GroupActionsController{
 		const {dialog} = req.query,
 			participants = await DialogRepository.getParticipants(dialog.toString());
 
-		return res.json({message: 'Participants for dialog', participants});
+		const activeParticipants = participants.filter(part => !part.banTime);
+		return res.json({message: 'Participants for dialog', participants: activeParticipants});
 	}
 }
 

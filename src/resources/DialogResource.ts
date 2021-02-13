@@ -29,10 +29,12 @@ class DialogResource extends Resource<IDialog>{
 		const opts = this.data.type == DialogTypes.PERSONAL ?
 			await this.getOptsForPersonal() : await this.getOptsForChat();
 
+		const activeParts = this.data.participants.filter(part => !part.banTime);
+
 		return {
 			_id: this.data._id,
 			type: this.data.type,
-			partCount: this.data.participants.length,
+			partCount: activeParts.length,
 			groupOptions: this.data.groupOptions,
 			unread: unread.length,
 			lastMessage,

@@ -3,10 +3,15 @@ import {IMessage} from '../../models/Message.model';
 
 
 class DeleteMessageEvent implements IEvent{
-	constructor(private deletedMessage: IMessage){}
+	constructor(private curUser: string, private deletedMessage: IMessage){}
 
 	getDeletedMessage(){
 		return this.deletedMessage;
+	}
+
+
+	getCurUser(){
+		return this.curUser;
 	}
 
 	static getName(){

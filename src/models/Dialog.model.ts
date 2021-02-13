@@ -43,13 +43,13 @@ const DialogSchema = new Schema<IDialog>({
 			type: Schema.Types.ObjectId,
 			ref: 'User'
 		},
-		bannedAt: {
+		banTime: {
 			type: Date,
 			default: null
 		},
-		leaveAt: {
-			type: Date,
-			default: null
+		banType: {
+			type: Number,
+			default: 0
 		}
 	}],
 	lastMessage: {

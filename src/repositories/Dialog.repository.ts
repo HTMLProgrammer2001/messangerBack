@@ -6,7 +6,7 @@ import UserRepository from './User.repository';
 import {DialogTypes} from '../constants/DialogTypes';
 import {IPaginateResponse} from '../interfaces/IPaginateData';
 import {IParticipant} from '../interfaces/IParticipant';
-import {PartRoles} from '../constants/PartRoles';
+import {BanType} from '../constants/BanType';
 
 
 type IPaginateFor = IPaginateResponse<IDialog> | undefined;
@@ -27,12 +27,6 @@ class DialogRepository {
 	}
 
 	async getDialogByNick(id: string, nickname = '') {
-		//find chat with this nick
-		const chat = await Dialog.findOne({type: DialogTypes.CHAT, nickname});
-
-		if (chat)
-			return chat;
-
 		//find personal chat with nick
 		const personal = await Dialog.aggregate([
 			{$match: {type: DialogTypes.PERSONAL}},
@@ -142,7 +136,7 @@ class DialogRepository {
 		} else if (dlg.type == DialogTypes.CHAT) {
 			//find index of delete in group
 			const index = dlg.participants.findIndex(part => {
-				return part.user.toString() == userID.toString() && !part.leaveAt && !part.bannedAt
+				return part.user.toString() == userID.toString() && !part.banTime
 			});
 
 			return index == -1;
@@ -153,13 +147,9 @@ class DialogRepository {
 		return Dialog.aggregate([
 			{$match: {_id: new Types.ObjectId(dialogID)}},
 			{$unwind: '$participants'},
-			{$match: {
-				'participants.bannedAt': {$type: 10},
-				'participants.leaveAt': {$type: 10}
-			}},
 			{$replaceRoot: {newRoot: '$participants'}},
 			{$lookup: {from: 'users', localField: 'user', foreignField: '_id', as: 'user'}},
-			{$project: {role: 1, user: {$arrayElemAt: ['$user', 0]}}}
+			{$project: {role: 1, banTime: 1, banType: 1, user: {$arrayElemAt: ['$user', 0]}}}
 		]);
 	}
 
@@ -194,21 +184,27 @@ class DialogRepository {
 
 	async isActive(dialogID: string | Types.ObjectId, user: string | Types.ObjectId){
 		const part = await this.getParticipant(dialogID.toString(), user.toString());
-		return !!part && Boolean(!part.bannedAt && !part.leaveAt);
+		return !!part && !part.banTime;
 	}
 
 	async deleteGroup(id: string | Types.ObjectId){
 		return Dialog.updateOne({_id: Types.ObjectId(id.toString())}, {
-			$set: {'participants.$[].bannedAt': new Date()}
+			$set: {'participants.$[].banTime': new Date()}
 		});
 	}
 
 	async leave(dialogID: string | Types.ObjectId, user: string | Types.ObjectId){
-		return this.updateParticipant(dialogID.toString(), user.toString(), {leaveAt: new Date()});
+		return this.updateParticipant(dialogID.toString(), user.toString(), {
+			banTime: new Date(),
+			banType: BanType.LEAVE
+		});
 	}
 
 	async ban(dialogID: string | Types.ObjectId, user: string | Types.ObjectId){
-		return this.updateParticipant(dialogID.toString(), user.toString(), {bannedAt: new Date()});
+		return this.updateParticipant(dialogID.toString(), user.toString(), {
+			banTime: new Date(),
+			banType: BanType.BAN
+		});
 	}
 }
 

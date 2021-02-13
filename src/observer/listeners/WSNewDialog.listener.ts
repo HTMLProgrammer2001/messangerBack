@@ -9,15 +9,15 @@ const WSNewDialogListener: IListener = async (event: NewDialogEvent) => {
 	const dialog = event.getDialog(),
 		curUser = event.getUser();
 
-	//make resource
-	const dlgMsg = new DialogResource(dialog, dialog.participants[1].user);
-	await dlgMsg.json();
-
 	//send to socket
-	dialog.participants.map(({user}) => {
-		if(user.toString() != curUser.toString())
+	return Promise.all(dialog.participants.map(async ({user}) => {
+		//make resource
+		const dlgMsg = new DialogResource(dialog, user);
+		await dlgMsg.json();
+
+		if(event.getBroadcast() || user.toString() != curUser.toString())
 			io.to(user.toString()).emit('newDialog', dlgMsg);
-	});
+	}));
 };
 
 export default WSNewDialogListener;

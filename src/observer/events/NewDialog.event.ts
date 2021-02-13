@@ -5,10 +5,20 @@ import {IEvent} from '../../interfaces/IEvent';
 
 
 class NewDialogEvent implements IEvent{
+	private isBroadcast = false;
 	constructor(private dialog: IDialog, private user: Types.ObjectId){}
 
 	getDialog(): IDialog{
 		return this.dialog;
+	}
+
+	getBroadcast(){
+		return this.isBroadcast;
+	}
+
+	broadcast(){
+		this.isBroadcast = true;
+		return this;
 	}
 
 	getUser(){

@@ -98,7 +98,7 @@ class MessagesController {
 			return res.status(422).json({message: 'No dialog with this id'});
 
 		//check if user is participant
-		if (!dlg.participants.some(part => part.user.toString() == userID.toString() && !part.bannedAt && !part.leaveAt))
+		if (!dlg.participants.some(part => part.user.toString() == userID.toString() && !part.banTime))
 			return res.status(403).json({
 				message: 'You are not active participant of this dialog'
 			});
@@ -112,7 +112,7 @@ class MessagesController {
 
 		//create message
 		const newMessage = await MessageRepository.create({
-			type, dialog, author: req.user?._id,
+			type, dialog: dlg.id, author: req.user?._id,
 			message, time: new Date(), url, size
 		});
 
@@ -156,7 +156,7 @@ class MessagesController {
 			else {
 				//delete message for all
 				const msg = await MessageRepository.getById(messageID);
-				dispatch(new DeleteMessageEvent(msg));
+				dispatch(new DeleteMessageEvent(req.user.id, msg));
 				await MessageRepository.delete(msg._id);
 			}
 		}

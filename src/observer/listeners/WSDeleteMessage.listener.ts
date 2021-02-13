@@ -7,13 +7,14 @@ import {io} from '../../ws/';
 
 const wsDeleteMessageListener: IListener = async (event: DeleteMessageEvent) => {
 	const deleteMessage = event.getDeletedMessage(),
+		curUser = event.getCurUser(),
 		populatedDeleteMsg = deleteMessage.populate('dialog');
 
 	await populatedDeleteMsg.execPopulate();
 
 	//send to socket
 	(populatedDeleteMsg.dialog as any as IDialog).participants.map(({user}) => {
-		if(user.toString() != deleteMessage.author.toString())
+		if(user.toString() != curUser.toString())
 			io.to(user.toString()).emit('deleteMessage', deleteMessage.id);
 	});
 };

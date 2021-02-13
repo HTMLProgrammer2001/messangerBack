@@ -1,3 +1,5 @@
+import {Types} from 'mongoose';
+
 import Resource from './Resource';
 import {IMessage} from '../models/Message.model';
 
@@ -20,6 +22,11 @@ class MessageResource extends Resource<IMessage>{
 			dialog: any = this.data.dialog;
 
 		if(this.data.deletedFor.includes(this.userID.toString()))
+			return null;
+
+		const part = await DialogRepository.getParticipant(dialog.toString(), this.userID.toString());
+
+		if(part.banTime && +this.data.time >= +part.banTime)
 			return null;
 
 		//load author

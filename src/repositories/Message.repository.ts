@@ -67,6 +67,12 @@ class MessageRepository{
 	}
 
 	async paginateDialogFor(user: string, dialog: string, {page = 1, pageSize = 5}: {page: number, pageSize: number}){
+		let part = await DialogRepository.getParticipant(dialog, user),
+			lessDate = Date.now();
+
+		if(part.bannedAt || part.leaveAt)
+			lessDate = Math.max(+part.bannedAt, +part.leaveAt);
+
 		const messages = await Message.aggregate([
 			{$limit: 1},
 			{$project: {_id: 1}},
@@ -75,7 +81,11 @@ class MessageRepository{
 				$lookup: {
 					from: 'messages',
 					pipeline: [
-						{$match: {dialog: new Types.ObjectId(dialog), deletedFor: {$nin: [user]}}},
+						{$match: {
+							dialog: new Types.ObjectId(dialog),
+							deletedFor: {$nin: [user]},
+							time: {$lte: new Date(lessDate)}
+						}},
 						{$sort: {time: -1}}
 					],
 					as: 'messages'
@@ -95,12 +105,19 @@ class MessageRepository{
 	}
 
 	async getUnreadMessagesFor(user: string, dialog: Schema.Types.ObjectId){
+		let part = await DialogRepository.getParticipant(dialog.toString(), user),
+			lessDate = Date.now();
+
+		if(part?.bannedAt || part?.leaveAt)
+			lessDate = Math.max(+part.bannedAt, +part.leaveAt);
+
 		const messagesReq = Message.aggregate([
 			{$match: {
 				dialog,
 				readBy: {$ne: user.toString()},
 				deletedFor: {$ne: user.toString()},
-				author: {$ne: user}
+				author: {$ne: user},
+				time: {$lte: new Date(lessDate)}
 			}},
 			{$sort: {time: -1}}
 		]);

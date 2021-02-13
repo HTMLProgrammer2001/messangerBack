@@ -35,7 +35,7 @@ class DialogsController{
 			return res.status(404).json({message: 'No user with this id'});
 
 		//create dialog and friend request
-		let dialog = await DialogRepository.getDialogByNick(anotherUser.nickname);
+		let dialog = await DialogRepository.getDialogByNick(req.user._id, anotherUser.nickname);
 
 		if(!dialog)
 			dialog = await DialogRepository.create({
