@@ -171,6 +171,12 @@ class DialogRepository {
 		}, {$set: setter});
 	}
 
+	async addParticipant(dialogID: string, userID: string){
+		return Dialog.updateOne({_id: new Types.ObjectId(dialogID)}, {
+			$push: {participants: {user: new Types.ObjectId(userID)}}
+		});
+	}
+
 	async getMyRoleFor(dialogID: string | Types.ObjectId, user: string | Types.ObjectId){
 		const role = await Dialog.aggregate([
 			{$match: {type: DialogTypes.CHAT, _id: dialogID}},

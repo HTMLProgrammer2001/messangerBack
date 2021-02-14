@@ -3,6 +3,7 @@ import {Types} from 'mongoose';
 
 import DialogRepository from '../repositories/Dialog.repository';
 import MessageRepository from '../repositories/Message.repository';
+import UserRepository from '../repositories/User.repository';
 
 import {DialogTypes} from '../constants/DialogTypes';
 import {PartRoles} from '../constants/PartRoles';
@@ -21,6 +22,7 @@ type IChangeAdminRequest = Request<{}, {}, {dialog: string, user: string}>
 type IDeleteGroupRequest = Request<{id: string}, {}, {}, {}>
 type ILeaveGroupRequest = Request<{}, {}, {dialog: string}>
 type IBanRequest = Request<{}, {}, {dialog: string, user: string}>
+type IInviteRequest = Request<{}, {}, {dialog: string, users: string[]}>
 
 class GroupActionsController{
 	async create(req: IGroupCreateRequest, res: Response){
@@ -32,10 +34,10 @@ class GroupActionsController{
 			return res.status(422).json({message: 'Invalid input'});
 
 		const canInviteUsers = await Promise.all(participants.map(
-			(userID) => gate.can('invite', userID)
+			(userID) => gate.can('invite', user, userID)
 		));
 
-		if(canInviteUsers.every(e => e))
+		if(!canInviteUsers.every(e => e))
 			return res.status(403).json({message: 'You are banned by one or more users'});
 
 		//parse participants
@@ -103,8 +105,43 @@ class GroupActionsController{
 		return res.json({message: 'Dialog successfully deleted'});
 	}
 
-	async invite(){
+	async invite(req: IInviteRequest, res: Response){
+		const {dialog: dialogID, users} = req.body;
 
+		//check that we can invite all users
+		const canInvites = await Promise.all(users.map(userID =>
+			gate.can('invite', userID, dialogID))
+		);
+
+		if(!canInvites.every(i => i))
+			return res.status(403).json({message: 'You cannot invite one or more users'});
+
+		//add users
+		for(let userID of users){
+			const part = await DialogRepository.getParticipant(dialogID, userID),
+				user = await UserRepository.getById(userID);
+
+			if(part && !part.banTime)
+				continue;
+
+			if(part)
+				await DialogRepository.updateParticipant(dialogID, userID, {banType: 0, banTime: null});
+			else
+				await DialogRepository.addParticipant(dialogID, userID);
+
+			//create message
+			const msg = await MessageRepository.create({
+				type: MessageTypes.SPECIAL,
+				dialog: Types.ObjectId(dialogID), author: req.user.id,
+				message: `Invited ${user.name}`,
+				time: new Date()
+			});
+
+			//send to websocket
+			dispatch(new NewMessageEvent(msg, user._id).broadcast());
+		}
+
+		return res.json({message: 'Invited'});
 	}
 
 	async leave(req: ILeaveGroupRequest, res: Response){
