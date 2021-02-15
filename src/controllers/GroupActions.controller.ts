@@ -25,6 +25,7 @@ type ILeaveGroupRequest = Request<{}, {}, {dialog: string}>
 type IBanRequest = Request<{}, {}, {dialog: string, user: string}>
 type IInviteRequest = Request<{}, {}, {dialog: string, users: string[]}>
 type IChangeAvatarRequest = Request<{id: string}>
+type IChangeTitleRequest = Request<{id: string}, {}, {title: string}>
 
 class GroupActionsController{
 	async create(req: IGroupCreateRequest, res: Response){
@@ -80,13 +81,35 @@ class GroupActionsController{
 		});
 	}
 
-	async changeTitle(){
+	async changeTitle(req: IChangeTitleRequest, res: Response){
+		const dialog = await DialogRepository.getDialogById(req.params.id),
+			{user} = req,
+			{title} = req.body;
 
+		if(!await gate.can('changeGroup', user, req.params.id))
+			return res.status(403).json({message: 'Only admins can change group options'});
+
+		await DialogRepository.update(new Types.ObjectId(req.params.id), {
+			groupOptions: {...dialog.groupOptions, title}
+		});
+
+		//new message
+		const msg = await MessageRepository.create({
+			author: user._id, dialog: dialog._id, type: MessageTypes.SPECIAL,
+			message: `New title is ${title}`, time: new Date()
+		});
+
+		//send ws
+		dispatch(new NewMessageEvent(msg, user._id).broadcast());
+		return res.json({message: 'Title was changed'});
 	}
 
 	async deleteAvatar(req: IChangeAvatarRequest, res: Response){
 		const dialog = await DialogRepository.getDialogById(req.params.id),
 			{user} = req;
+
+		if(!await gate.can('changeGroup', user, req.params.id))
+			return res.status(403).json({message: 'Only admins can change group options'});
 
 		if(!dialog.groupOptions?.avatar)
 			return res.status(404).json({message: 'No avatar for dialog'});
@@ -110,6 +133,9 @@ class GroupActionsController{
 	async changeAvatar(req: IChangeAvatarRequest, res: Response){
 		const dialog = await DialogRepository.getDialogById(req.params.id),
 			{user} = req;
+
+		if(!await gate.can('changeGroup', user, req.params.id))
+			return res.status(403).json({message: 'Only admins can change group options'});
 
 		if(!req.file)
 			return res.status(422).json({message: 'No file'});
