@@ -14,6 +14,7 @@ import DialogResource from '../resources/DialogResource';
 
 import {dispatch} from '../observer';
 import gate from '../can';
+import StorageService from '../services/StorageService';
 
 
 type IGroupCreateRequest = Request<{}, {}, {participants: string[], name: string}>
@@ -23,6 +24,7 @@ type IDeleteGroupRequest = Request<{id: string}, {}, {}, {}>
 type ILeaveGroupRequest = Request<{}, {}, {dialog: string}>
 type IBanRequest = Request<{}, {}, {dialog: string, user: string}>
 type IInviteRequest = Request<{}, {}, {dialog: string, users: string[]}>
+type IChangeAvatarRequest = Request<{id: string}>
 
 class GroupActionsController{
 	async create(req: IGroupCreateRequest, res: Response){
@@ -82,8 +84,56 @@ class GroupActionsController{
 
 	}
 
-	async changeAvatar(){
+	async deleteAvatar(req: IChangeAvatarRequest, res: Response){
+		const dialog = await DialogRepository.getDialogById(req.params.id),
+			{user} = req;
 
+		if(!dialog.groupOptions?.avatar)
+			return res.status(404).json({message: 'No avatar for dialog'});
+
+		//update dialog
+		await DialogRepository.update(new Types.ObjectId(req.params.id), {
+			groupOptions: {...dialog.groupOptions, avatar: null}
+		});
+
+		//new message
+		const msg = await MessageRepository.create({
+			author: user._id, dialog: dialog._id, type: MessageTypes.SPECIAL,
+			message: 'Avatar deleted', time: new Date()
+		});
+
+		//send ws
+		dispatch(new NewMessageEvent(msg, user._id).broadcast());
+		return res.json({message: 'Avatar deleted'});
+	}
+
+	async changeAvatar(req: IChangeAvatarRequest, res: Response){
+		const dialog = await DialogRepository.getDialogById(req.params.id),
+			{user} = req;
+
+		if(!req.file)
+			return res.status(422).json({message: 'No file'});
+
+		//upload new avatar
+		if(dialog.groupOptions?.avatar)
+			await StorageService.remove(dialog.groupOptions.avatar);
+
+		const avatar = await StorageService.upload(req.file);
+
+		//update dialog
+		await DialogRepository.update(new Types.ObjectId(req.params.id), {
+			groupOptions: {...dialog.groupOptions, avatar}
+		});
+
+		//new message
+		const msg = await MessageRepository.create({
+			author: user._id, dialog: dialog._id,
+			type: MessageTypes.SPECIAL, message: 'Avatar changed', time: new Date()
+		});
+
+		//send ws
+		dispatch(new NewMessageEvent(msg, user._id).broadcast());
+		return res.json({message: 'Avatar changed'});
 	}
 
 	async deleteGroup(req: IDeleteGroupRequest, res: Response){
