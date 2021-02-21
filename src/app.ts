@@ -13,6 +13,7 @@ import {connect} from './db';
 import {startWebsocket} from './ws';
 import updateSeenMiddleware from './middlewares/updateSeen.middleware';
 import logInWithoutRedirect from './middlewares/logInWithoutRedirect.middleware';
+import mqService from './services/MQService/';
 
 
 const app: Application = express();
@@ -51,6 +52,7 @@ async function start() {
 
 	await connect(process.env.MONGO_URL);
 	await startWebsocket(http);
+	await mqService.connect();
 
 	//start server
 	if(!process.env.APP_ENV || !process.env.APP_ENV.includes('testing')){

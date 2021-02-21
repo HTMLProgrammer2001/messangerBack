@@ -11,15 +11,17 @@ import WSNewDialogListener from './listeners/WSNewDialog.listener';
 import WSBanUserListener from './listeners/WSBanUser.listener';
 import WSUpdateMessageListener from './listeners/WSUpdateMessage.listener';
 import WSDeleteMessageListener from './listeners/WSDeleteMessage.listener';
+import SQSNewMessageListener from './listeners/SQSNewMessage.listener';
 
 
 const emitter = new EventEmitter();
 
 //connect listeners to events
-emitter.on(NewMessageEvent.getName(), WSNewMessageListener);
-emitter.on(NewDialogEvent.getName(), WSNewDialogListener);
-emitter.on(BanEvent.getName(), WSBanUserListener);
-emitter.on(UpdateMessageEvent.getName(), WSUpdateMessageListener);
-emitter.on(DeleteMessageEvent.getName(), WSDeleteMessageListener);
+emitter.addListener(NewMessageEvent.getName(), WSNewMessageListener);
+emitter.addListener(NewMessageEvent.getName(), SQSNewMessageListener);
+emitter.addListener(NewDialogEvent.getName(), WSNewDialogListener);
+emitter.addListener(BanEvent.getName(), WSBanUserListener);
+emitter.addListener(UpdateMessageEvent.getName(), WSUpdateMessageListener);
+emitter.addListener(DeleteMessageEvent.getName(), WSDeleteMessageListener);
 
 export default emitter;

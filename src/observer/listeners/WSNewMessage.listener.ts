@@ -1,5 +1,4 @@
 import {IListener} from '../../interfaces/IListener';
-import {IDialog} from '../../models/Dialog.model';
 
 import NewMessageEvent from '../events/NewMessage.event';
 import MessageResource from '../../resources/MessageResource';
