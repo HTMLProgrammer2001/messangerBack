@@ -1,0 +1,29 @@
+{
+	"definition": {
+		"openapi": "3.0.0",
+		"info": {
+			"title": "Messenger api docs",
+			"version": "0.1.0",
+			"description": "This is backend for messenger",
+			"license": {
+				"name": "MIT",
+				"url": "https://spdx.org/licenses/MIT.html"
+			},
+			"contact": {
+				"name": "HTMLProgrammer",
+				"email": "cssuperpy@gmail.com"
+			}
+		},
+		"servers": [
+			{
+				"url": "http://localhost:5000",
+				"description": "Development server"
+			},
+			{
+				"url": "http://chat.eu-central-1.elasticbeanstalk.com/api",
+				"description": "Production server"
+			}
+		]
+	},
+	"apis": ["**/routes/*.{ts,js}", "**/docs/**/*.yaml"]
+}

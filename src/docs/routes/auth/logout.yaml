@@ -1,0 +1,18 @@
+paths:
+  /logout:
+    post:
+      tags: [Auth]
+      summary: Logout user
+      security:
+        - ApiKeyAuth: []
+
+      responses:
+        200:
+          description: User token was revoked
+          content:
+            application/json:
+              example:
+                message: You were successfully logged out
+
+        403:
+          description: User token is invalid

@@ -1,0 +1,18 @@
+components:
+  FieldError:
+    type: object
+    properties:
+      msg:
+        type: string
+        description: Error messsage
+        example: Incorrect phone number
+
+      param:
+        type: string
+        description: Name of input field
+        example: phone
+
+      location:
+        type: string
+        description: Location of param
+        enum: [body, query]

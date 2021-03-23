@@ -1,0 +1,36 @@
+paths:
+  /confirm/sign:
+    post:
+      tags: [Auth]
+      summary: Confirm user sign in
+      consume: [application/json]
+
+      parameters:
+        - in: body
+          name: code
+          description: Code that was sent to your number
+
+      responses:
+        200:
+          description: User signed in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+                  token:
+                    type: string
+                    description: JWT token
+
+                  user:
+                    $ref: '#/components/User'
+
+        422:
+          description: Incorrect input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/ErrorResponse'

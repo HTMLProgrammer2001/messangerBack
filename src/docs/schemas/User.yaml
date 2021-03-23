@@ -1,0 +1,47 @@
+components:
+    User:
+        type: object
+        properties:
+            _id:
+                type: integer
+                description: User id
+                example: 1
+
+            avatar:
+                type: string
+                description: URL of user avatar or null
+                example: null
+
+            name:
+                type: string
+                description: Name of user
+                example: Tony Stark
+
+            nickname:
+                type: string
+                description: User nickname
+                example: stark
+
+            phone:
+                type: string
+                description: Phone number
+                example: +70334578
+
+            description:
+                type: string
+                description: User desc
+                example: Genius, billionaire, philantropist
+
+            isBanned:
+                type: boolean
+                description: True if this user banned by current user
+                example: false
+
+            isOnline:
+                type: boolean
+                description: Is user online now
+                example: true
+
+            lastSeen:
+                type: string
+                format: date

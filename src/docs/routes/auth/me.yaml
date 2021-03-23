@@ -1,0 +1,20 @@
+paths:
+  /me:
+    get:
+      tags: [Auth]
+      summary: Retrieve current user info
+      security:
+        - ApiKeyAuth: []
+
+      responses:
+        200:
+          description: Return user on success or null if user not found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                    - $ref: '#/components/User'
+                    - type: null
+
+        401:
+          description: Return error if token is invalid or not provided

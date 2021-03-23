@@ -55,7 +55,7 @@ class UserActionsController{
 		//send code
 		try {
 			await sendCode(user.phone, CodeTypes.LOGIN, user._id);
-			res.json({message: 'Verify code that was sent in your phone'});
+			res.json({message: 'Verify code that was sent to your phone'});
 		}
 		catch (e) {
 			res.status(500).json({

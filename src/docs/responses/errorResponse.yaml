@@ -1,0 +1,12 @@
+components:
+  responses:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+        errors:
+          type: array
+          items:
+            $ref: '#/components/FieldError'

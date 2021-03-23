@@ -1,0 +1,35 @@
+paths:
+  /login:
+    post:
+      tags: [Auth]
+      summary: Route for login user
+
+      parameters:
+        - in: body
+          name: phone
+          description: User phone number
+
+      responses:
+        200:
+          description: Code was successfully sent
+          content:
+            application/json:
+              example:
+                message: Verify code that was sent on your phone
+
+        422:
+          description: User isn't exists or verified
+          content:
+            application/json:
+              example:
+                message: User with this phone not exists or unverified
+
+        500:
+          description: Error occur while send message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/ErrorResponse'
+              example:
+                message: Error in send message to your number
+                errros: []
