@@ -22,7 +22,8 @@ import mqService from './services/MQService/';
 const app: Application = express();
 
 const specs = swaggerJSDoc(swaggerOptions);
-app.use('/docs', swaggerUI.serve, swaggerUI.setup(specs));
+app.use('/docs', swaggerUI.serve);
+app.get('/docs', swaggerUI.setup(specs));
 
 //middleware
 app.use(<any>cors());
