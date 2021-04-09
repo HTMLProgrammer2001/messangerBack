@@ -101,9 +101,7 @@ class EditMeController{
 
 		//show error if has not avatar
 		if(!user.avatar)
-			return res.status(422).json({
-				message: 'This user has not avatar'
-			});
+			return res.status(422).json({message: 'This user has not avatar'});
 
 		//delete file
 		await StorageService.remove(user.avatar);

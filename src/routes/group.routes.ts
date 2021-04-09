@@ -2,7 +2,6 @@ import {Router} from 'express';
 import {authenticate} from 'passport';
 
 import GroupActionsController from '../controllers/GroupActions.controller';
-import errorOnInvalid from '../middlewares/errorOnInvalid.middleware';
 import StorageService from '../services/StorageService';
 
 

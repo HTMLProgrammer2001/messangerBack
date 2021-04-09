@@ -221,7 +221,7 @@ class MessagesController {
 		);
 
 		if(bannedDialogs.some(isBanned => isBanned))
-			return res.status(401).json({message: 'You was banned in one or more dialogs'});
+			return res.status(403).json({message: 'You was banned in one or more dialogs'});
 
 		//format messages
 		const flatMessages = await messages.reduce(async (acc, msgID) => {

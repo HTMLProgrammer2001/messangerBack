@@ -3,14 +3,11 @@ import {createServer} from 'http';
 import bodyParser from 'body-parser';
 import passport from 'passport';
 import cors from 'cors';
-import swaggerUI from 'swagger-ui-express';
-import swaggerJSDoc from 'swagger-jsdoc';
 
 import './passport';
 import './initEnv';
 import './can/initRules';
 
-import swaggerOptions from './swagger.json';
 import rootRouter from './routes/';
 import {connect} from './db';
 import {startWebsocket} from './ws';
@@ -20,10 +17,6 @@ import mqService from './services/MQService/';
 
 
 const app: Application = express();
-
-const specs = swaggerJSDoc(swaggerOptions);
-app.use('/docs', swaggerUI.serve);
-app.get('/docs', swaggerUI.setup(specs));
 
 //middleware
 app.use(<any>cors());
@@ -63,7 +56,7 @@ async function start() {
 
 	//start server
 	if(!process.env.APP_ENV || !process.env.APP_ENV.includes('testing')){
-		http.listen(PORT, () => {
+		http.listen(+PORT, '192.168.0.150', 511, () => {
 			console.log(`App is running on ${PORT} port`);
 		});
 	}
