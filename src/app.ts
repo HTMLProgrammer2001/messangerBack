@@ -54,10 +54,12 @@ async function start() {
 	await startWebsocket(http);
 	await mqService.connect();
 
+	const host = process.env.APP_HOST || '127.0.0.1';
+
 	//start server
 	if(!process.env.APP_ENV || !process.env.APP_ENV.includes('testing')){
-		http.listen(+PORT, '192.168.0.150', 511, () => {
-			console.log(`App is running on ${PORT} port`);
+		http.listen(+PORT, host, 511, () => {
+			console.log(`App is running on ${host}:${PORT} port`);
 		});
 	}
 }
