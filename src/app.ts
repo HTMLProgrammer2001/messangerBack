@@ -58,7 +58,7 @@ async function start() {
 
 	//start server
 	if(!process.env.APP_ENV || !process.env.APP_ENV.includes('testing')){
-		http.listen(+PORT, host, 511, () => {
+		http.listen(+PORT, () => {
 			console.log(`App is running on ${host}:${PORT} port`);
 		});
 	}
