@@ -7,7 +7,7 @@ import {DialogStatus} from '../../constants/DialogStatus';
 
 let timers: Record<string, number> = {};
 
-const setStatusListener = async (socket: Socket, dialog: string, status: DialogStatus) => {
+const setStatusListener = async (socket: Socket, {dialog, status}: {dialog: string, status: DialogStatus}) => {
 	const dlg = await DialogRepository.getDialogById(dialog);
 
 	if(!dlg)

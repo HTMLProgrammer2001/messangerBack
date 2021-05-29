@@ -142,7 +142,9 @@ class MessagesController {
 			if (!msg)
 				return res.status(404).json({message: 'No message with this id'});
 
-			const canDelete = await gate.can('deleteMessage', req.user, messageID);
+			let canDelete = true;
+			if(isOther)
+				canDelete = await gate.can('deleteMessage', req.user, messageID);
 
 			//check error
 			if (!canDelete)

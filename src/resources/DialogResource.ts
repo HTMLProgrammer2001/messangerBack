@@ -57,6 +57,7 @@ class DialogResource extends Resource<IDialog>{
 			avatar: userModel?.avatar,
 			nick: userModel?.nickname,
 			isActive: !userModel.banned.includes(this.userID.toString()),
+			isOnline: userModel?.isOnline,
 			user: userID
 		};
 	}
@@ -67,7 +68,8 @@ class DialogResource extends Resource<IDialog>{
 			avatar: this.data.groupOptions?.avatar,
 			nick: this.data._id,
 			isActive: await DialogRepository.isActive(this.data._id, this.userID),
-			myRole: await DialogRepository.getMyRoleFor(this.data._id, this.userID)
+			myRole: await DialogRepository.getMyRoleFor(this.data._id, this.userID),
+			isOnline: false
 		}
 	}
 }

@@ -19,11 +19,10 @@ const WSNewMessageListener: IListener = async (event: NewMessageEvent) => {
 			return;
 
 		//make resource
-		const msgJson = new MessageResource(message, curUser, true);
+		const msgJson = new MessageResource(message, user.toString(), true);
 		await msgJson.json();
 
-		if (event.getBroadcast() || user.toString() != curUser.toString())
-			io.to(user.toString()).emit('newMessage', msgJson);
+		io.to(user.toString()).emit('newMessage', msgJson);
 	}));
 };
 

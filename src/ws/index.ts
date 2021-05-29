@@ -26,7 +26,6 @@ export const startWebsocket = async (http: HTTPServer) => {
 				next();
 			}
 		};
-
 		//@ts-ignore
 		await auth(socket.handshake.query['Token'], done);
 	});

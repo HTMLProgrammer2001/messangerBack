@@ -11,7 +11,7 @@ const deleteMessageRule: IRule = async (me: IUser, messageID: string) => {
 		part = await DialogRepository.getParticipant(msg?.dialog.toString(), me.id);
 
 	const isActive = !part?.banTime;
-	const canDelete = part?.role <= PartRoles.ADMIN || msg.author.toString() != me.id;
+	const canDelete = part?.role <= PartRoles.ADMIN || msg.author.toString() == me.id;
 
 	return isActive && canDelete;
 };
